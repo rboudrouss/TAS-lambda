@@ -1,3 +1,4 @@
+import { SingleParser, F } from "@masala/parser";
 import type {
   pTermImplementation,
   alphaConversionPartialFn,
@@ -15,6 +16,14 @@ function varConstructor(arg: { name: string }) {
 }
 
 type varPtermType = ReturnType<typeof varConstructor>;
+
+// Parser
+
+const varParser: SingleParser<varPtermType> = F.regex(
+  /[a-zA-Z_][a-zA-Z0-9_]*/
+).map((m) => {
+  return varConstructor({ name: m });
+});
 
 // Alpha conversion
 
@@ -45,9 +54,13 @@ const varEvaluation: evaluationPartialFn<varPtermType> =
 
 // Export
 
-export const varPTermImplementation: pTermImplementation<varPtermType> = {
+export const varPTermImplementation: pTermImplementation<
+  varPtermType,
+  Parameters<typeof varConstructor>[0]
+> = {
   pTermName: varPTermName,
   constructor: varConstructor,
+  parser: varParser,
   alphaConversion: varAlphaConversion,
   needConversion,
   substitution: varSubstitution,

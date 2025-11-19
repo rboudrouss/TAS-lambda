@@ -1,8 +1,10 @@
+import { SingleParser } from "@masala/parser";
+
 // Definition
 
 export type generalPTerm = { type: string; [key: string]: unknown };
 
-export type constructor<Pterm extends generalPTerm> = (arg: any) => Pterm;
+export type constructor<Args, Pterm extends generalPTerm> = (args: Args) => Pterm;
 
 // Alpha conversion
 
@@ -25,8 +27,10 @@ export type substitutionFn<PTerm extends generalPTerm> = (
   t0: PTerm
 ) => PTerm;
 
-export type substitutionPartialFn<PTerm extends generalPTerm> = (arg: {
-  fn: substitutionFn<PTerm>;
+export type substitutionPartialFn<PTerm extends generalPTerm> = <
+  GlobalPTerm extends generalPTerm
+>(arg: {
+  fn: substitutionFn<GlobalPTerm>;
   v: string;
   t0: PTerm;
 }) => (t: PTerm) => PTerm;
@@ -44,18 +48,29 @@ export type evaluationFn<PTerm extends generalPTerm> = (
   arg: evalContext<PTerm>
 ) => evalContext<PTerm> | null;
 
-export type evaluationPartialFn<PTerm extends generalPTerm> = (arg: {
-  fn: evaluationFn<PTerm>;
-  state: state<PTerm>;
-}) => (t: PTerm) => evalContext<PTerm> | null;
+export type evaluationPartialFn<PTerm extends generalPTerm> = <
+  GlobalPTerm extends generalPTerm
+>(arg: {
+  fn: evaluationFn<GlobalPTerm>;
+  state: state<GlobalPTerm>;
+}) => (t: PTerm) => evalContext<GlobalPTerm> | null;
 
 // PTerm implementation
 
-export type pTermImplementation<PTerm extends generalPTerm> = {
+export type pTermImplementation<
+  PTerm extends generalPTerm,
+  Args
+> = {
   pTermName: PTerm["type"];
-  constructor: constructor<PTerm>;
+  constructor: constructor<Args, PTerm>;
   alphaConversion: alphaConversionPartialFn<PTerm>;
-  needConversion: boolean | ((t: PTerm) => boolean);
+  needConversion:
+    | boolean
+    | (<GlobalPTerm extends generalPTerm>(
+        t: PTerm,
+        fn: (t: GlobalPTerm) => boolean
+      ) => boolean);
   substitution: substitutionPartialFn<PTerm>;
   evaluation: evaluationPartialFn<PTerm>;
+  parser: SingleParser<PTerm>;
 };
