@@ -94,23 +94,26 @@ export function evalToNormalForm(
   term: PTerm,
   state: Map<string, PTerm> = new Map()
 ): PTerm | null {
-  // Alpha-convert before evaluation to ensure all bound variables are unique
   const renamedTerm = alphaConvert(term);
 
-  let ctx: evalContext<PTerm> | null = { term: renamedTerm, state };
-  let lastTerm = renamedTerm;
+  const loop = (ctx: evalContext<PTerm>): PTerm => {
+    const nextCtx = evaluate(ctx);
 
-  while (ctx !== null) {
-    lastTerm = ctx.term;
-    ctx = evaluate(ctx);
+    // No more reductions possible - reached normal form
+    if (nextCtx === null) {
+      return ctx.term;
+    }
 
     // Prevent infinite loops on stuck terms
-    if (ctx && ctx.term === lastTerm) {
-      break;
+    if (nextCtx.term === ctx.term) {
+      return ctx.term;
     }
-  }
 
-  return lastTerm;
+    // Continue reducing recursively
+    return loop(nextCtx);
+  };
+
+  return loop({ term: renamedTerm, state });
 }
 
 
