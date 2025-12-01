@@ -1,4 +1,8 @@
-import type { PTerm, pTermImplementation, evalContext } from "../general-types.ts";
+import type {
+  PTerm,
+  pTermImplementation,
+  evalContext,
+} from "../general-types.ts";
 
 // Import all pterm variant implementations
 import { varPTermImplementation } from "./var.ts";
@@ -7,15 +11,14 @@ import { appPTermImplementation } from "./app.ts";
 import { PTermRegistry } from "../general-types.ts";
 
 // Collect all implementations
-const registry: { [K in PTerm["type"]]: pTermImplementation<PTermRegistry[K]> } = {
+const registry: {
+  [K in PTerm["type"]]: pTermImplementation<PTermRegistry[K]>;
+} = {
   ...varPTermImplementation,
   ...absPTermImplementation,
   ...appPTermImplementation,
 } as const;
 
-
-// Re-export PTerm type
-export type { PTerm };
 
 // =============================================================================
 // Fresh variable generator
@@ -31,11 +34,9 @@ export function resetVarCounter(): void {
   varCounter = 0;
 }
 
-// =============================================================================
-// Combined operations (tying the recursive knot)
-// =============================================================================
-
-function getImpl<K extends PTerm["type"]>(t: PTerm & { type: K }): pTermImplementation<PTermRegistry[K]> {
+function getImpl<K extends PTerm["type"]>(
+  t: PTerm & { type: K }
+): pTermImplementation<PTermRegistry[K]> {
   const impl = registry[t.type as K];
 
   if (!impl) {
@@ -48,7 +49,10 @@ function getImpl<K extends PTerm["type"]>(t: PTerm & { type: K }): pTermImplemen
 }
 
 // Alpha conversion
-export function alphaConvert(t: PTerm, renaming: Map<string, string> = new Map()): PTerm {
+export function alphaConvert(
+  t: PTerm,
+  renaming: Map<string, string> = new Map()
+): PTerm {
   const impl = getImpl(t);
   return impl.alphaConversion(alphaConvert, renaming, freshVarGen, t);
 }
@@ -85,16 +89,16 @@ export function print(t: PTerm): string {
   return impl.print(print, t);
 }
 
-// =============================================================================
 // Evaluate to normal form
-// =============================================================================
-
 export function evalToNormalForm(
   term: PTerm,
   state: Map<string, PTerm> = new Map()
 ): PTerm | null {
-  let ctx: evalContext<PTerm> | null = { term, state };
-  let lastTerm = term;
+  // Alpha-convert before evaluation to ensure all bound variables are unique
+  const renamedTerm = alphaConvert(term);
+
+  let ctx: evalContext<PTerm> | null = { term: renamedTerm, state };
+  let lastTerm = renamedTerm;
 
   while (ctx !== null) {
     lastTerm = ctx.term;
@@ -109,8 +113,7 @@ export function evalToNormalForm(
   return lastTerm;
 }
 
-// =============================================================================
-// Export implementations for direct access if needed
-// =============================================================================
 
-export { implementations };
+export { registry };
+
+export type { PTerm };
