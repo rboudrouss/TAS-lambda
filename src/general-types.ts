@@ -58,6 +58,13 @@ export type FreeVarsCollectorPartial<Variant extends generalPTerm> = (
   t: Variant
 ) => Set<string>;
 
+// Print
+
+export type printPartial<Variant extends generalPTerm> = (
+  recurse: (t: PTerm) => string,
+  t: Variant
+) => string;
+
 export type Environnement<Ty> = Map<string, Ty>;
 
 export type Equation<Ty> = ReadonlyArray<readonly [Ty, Ty]>;
@@ -72,9 +79,8 @@ export type GenEquationPartial<Variant extends generalPTerm, Ty> = (
 ) => Equation<Ty>;
 
 // PTerm implementation
-// PTerm = the specific variant type (e.g., absPtermType)
+// Variant = the specific variant type (e.g., absPtermType)
 // PTerm = the full union type (e.g., PTerm)
-// Constraint: the variant must be part of the union (PTerm extends PTerm)
 
 export type pTermImplementation<
   Variant extends generalPTerm,
@@ -88,6 +94,7 @@ export type pTermImplementation<
   evaluation: evaluationPartial<Variant>;
   freeVarsCollector: FreeVarsCollectorPartial<Variant>;
   parser: parserPartial<Variant>;
+  print: printPartial<Variant>;
 };
 
 // PType implementation

@@ -21,7 +21,7 @@ function absConstructor(arg: { name: string; body: PTerm }): absPtermType {
 
 declare module "../general-types.ts" {
   interface PTermRegistry {
-    Abs: absPtermType;
+    [absPTermName]: absPtermType;
   }
 }
 
@@ -91,6 +91,13 @@ const absFreeVarsCollector = (
   return bodyFreeVars;
 };
 
+// Print
+
+const absPrint = (
+  recurse: (t: PTerm) => string,
+  t: absPtermType
+): string => `(fun ${t.name} -> ${recurse(t.body)})`;
+
 // Export
 
 export const absPTermImplementation: pTermImplementation<
@@ -105,4 +112,5 @@ export const absPTermImplementation: pTermImplementation<
   substitution: absSubstitution,
   evaluation: absEvaluation,
   freeVarsCollector: absFreeVarsCollector,
+  print: absPrint,
 };

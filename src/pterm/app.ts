@@ -17,7 +17,7 @@ function appConstructor(arg: { left: PTerm; right: PTerm }): appPtermType {
 
 declare module "../general-types.ts" {
   interface PTermRegistry {
-    App: appPtermType;
+    [appPTermName]: appPtermType;
   }
 }
 
@@ -111,6 +111,13 @@ const appFreeVarsCollector = (
   return new Set([...leftFreeVars, ...rightFreeVars]);
 };
 
+// Print
+
+const appPrint = (
+  recurse: (t: PTerm) => string,
+  t: appPtermType
+): string => `(${recurse(t.left)} ${recurse(t.right)})`;
+
 // Export
 
 export const appPTermImplementation: pTermImplementation<
@@ -125,4 +132,5 @@ export const appPTermImplementation: pTermImplementation<
   substitution: appSubstitution,
   evaluation: appEvaluation,
   freeVarsCollector: appFreeVarsCollector,
+  print: appPrint,
 };

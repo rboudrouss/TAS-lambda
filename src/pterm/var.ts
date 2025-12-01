@@ -13,7 +13,7 @@ type varPtermType = ReturnType<typeof varConstructor>;
 
 declare module "../general-types.ts" {
   interface PTermRegistry {
-    Var: varPtermType;
+    [varPTermName]: varPtermType;
   }
 }
 
@@ -63,6 +63,13 @@ const varFreeVarsCollector = (
   t: varPtermType
 ): Set<string> => new Set([t.name]);
 
+// Print
+
+const varPrint = (
+  _recurse: (t: PTerm) => string,
+  t: varPtermType
+): string => t.name;
+
 // Export
 
 export const varPTermImplementation: pTermImplementation<
@@ -77,4 +84,5 @@ export const varPTermImplementation: pTermImplementation<
   substitution: varSubstitution,
   evaluation: varEvaluation,
   freeVarsCollector: varFreeVarsCollector,
+  print: varPrint,
 };
