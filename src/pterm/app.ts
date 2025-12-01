@@ -1,5 +1,9 @@
 import { SingleParser, C, F } from "@masala/parser";
-import type { pTermImplementation, PTerm, evalContext } from "../general-types.ts";
+import type {
+  pTermImplementation,
+  PTerm,
+  evalContext,
+} from "../general-types.ts";
 
 // Definition
 
@@ -51,8 +55,10 @@ const appAlphaConversion = (
   return appConstructor({ left: newLeft, right: newRight });
 };
 
-const needConversion = (t: appPtermType, recurse: (t: PTerm) => boolean): boolean =>
-  recurse(t.left) || recurse(t.right);
+const needConversion = (
+  t: appPtermType,
+  recurse: (t: PTerm) => boolean
+): boolean => recurse(t.left) || recurse(t.right);
 
 // Substitution
 
@@ -68,14 +74,19 @@ const appSubstitution = (
 };
 
 // Type guard for AbsTerm (needed for beta reduction)
-function isAbs(t: PTerm): t is PTerm & { type: "Abs"; name: string; body: PTerm } {
+function isAbs(
+  t: PTerm
+): t is PTerm & { type: "Abs"; name: string; body: PTerm } {
   return t.type === "Abs";
 }
 
 // Evaluation
 
 const appEvaluation =
-  (recurse: (ctx: evalContext<PTerm>) => evalContext<PTerm> | null, state: Map<string, PTerm>) =>
+  (
+    recurse: (ctx: evalContext<PTerm>) => evalContext<PTerm> | null,
+    state: Map<string, PTerm>
+  ) =>
   (t: appPtermType): { term: PTerm; state: Map<string, PTerm> } | null => {
     // First, evaluate the left side (the function)
     const leftResult = recurse({ term: t.left, state });
@@ -88,16 +99,21 @@ const appEvaluation =
     const func = leftResult.term;
     const arg = rightResult.term;
 
-    // If left is an abstraction, perform beta reduction
+    //* / If left is an abstraction, perform beta reduction
     if (isAbs(func)) {
       // We need substitution - but we don't have access to it here
       // This requires the evaluation to receive a substitute function
       // For now, return the reduced application
-      return { term: appConstructor({ left: func, right: arg }), state: rightResult.state };
+      return {
+        term: appConstructor({ left: func, right: arg }),
+        state: rightResult.state,
+      };
     }
 
-    // If left is not a function, return the application (stuck term)
-    return { term: appConstructor({ left: func, right: arg }), state: rightResult.state };
+    return {
+      term: appConstructor({ left: func, right: arg }),
+      state: rightResult.state,
+    };
   };
 
 // Free variables collector
@@ -113,24 +129,21 @@ const appFreeVarsCollector = (
 
 // Print
 
-const appPrint = (
-  recurse: (t: PTerm) => string,
-  t: appPtermType
-): string => `(${recurse(t.left)} ${recurse(t.right)})`;
+const appPrint = (recurse: (t: PTerm) => string, t: appPtermType): string =>
+  `(${recurse(t.left)} ${recurse(t.right)})`;
 
 // Export
 
-export const appPTermImplementation: pTermImplementation<
-  appPtermType,
-  Parameters<typeof appConstructor>
-> = {
-  pTermName: appPTermName,
-  constructor: appConstructor,
-  parser: appParser,
-  alphaConversion: appAlphaConversion,
-  needConversion,
-  substitution: appSubstitution,
-  evaluation: appEvaluation,
-  freeVarsCollector: appFreeVarsCollector,
-  print: appPrint,
+export const appPTermImplementation = {
+  [appPTermName]: {
+    pTermName: appPTermName,
+    constructor: appConstructor,
+    parser: appParser,
+    alphaConversion: appAlphaConversion,
+    needConversion,
+    substitution: appSubstitution,
+    evaluation: appEvaluation,
+    freeVarsCollector: appFreeVarsCollector,
+    print: appPrint,
+  } as pTermImplementation<appPtermType>,
 };

@@ -84,10 +84,9 @@ export type GenEquationPartial<Variant extends generalPTerm, Ty> = (
 
 export type pTermImplementation<
   Variant extends generalPTerm,
-  Args extends unknown[]
 > = {
   pTermName: Variant["type"];
-  constructor: (...args: Args) => Variant;
+  constructor: (args: Omit<Variant, "type">) => Variant;
   alphaConversion: alphaConversionPartial<Variant>;
   needConversion: needConversionPartial<Variant>;
   substitution: substitutionPartial<Variant>;

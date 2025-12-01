@@ -93,24 +93,21 @@ const absFreeVarsCollector = (
 
 // Print
 
-const absPrint = (
-  recurse: (t: PTerm) => string,
-  t: absPtermType
-): string => `(fun ${t.name} -> ${recurse(t.body)})`;
+const absPrint = (recurse: (t: PTerm) => string, t: absPtermType): string =>
+  `(fun ${t.name} -> ${recurse(t.body)})`;
 
 // Export
 
-export const absPTermImplementation: pTermImplementation<
-  absPtermType,
-  Parameters<typeof absConstructor>
-> = {
-  pTermName: absPTermName,
-  constructor: absConstructor,
-  parser: absParser,
-  alphaConversion: absAlphaConversion,
-  needConversion,
-  substitution: absSubstitution,
-  evaluation: absEvaluation,
-  freeVarsCollector: absFreeVarsCollector,
-  print: absPrint,
+export const absPTermImplementation = {
+  [absPTermName]: {
+    pTermName: absPTermName,
+    constructor: absConstructor,
+    parser: absParser,
+    alphaConversion: absAlphaConversion,
+    needConversion,
+    substitution: absSubstitution,
+    evaluation: absEvaluation,
+    freeVarsCollector: absFreeVarsCollector,
+    print: absPrint,
+  } as pTermImplementation<absPtermType>,
 };

@@ -72,17 +72,16 @@ const varPrint = (
 
 // Export
 
-export const varPTermImplementation: pTermImplementation<
-  varPtermType,
-  Parameters<typeof varConstructor>
-> = {
-  pTermName: varPTermName,
-  constructor: varConstructor,
-  parser: varParser,
-  alphaConversion: varAlphaConversion,
-  needConversion,
-  substitution: varSubstitution,
-  evaluation: varEvaluation,
-  freeVarsCollector: varFreeVarsCollector,
-  print: varPrint,
+export const varPTermImplementation = {
+  [varPTermName]: {
+    pTermName: varPTermName,
+    constructor: varConstructor,
+    parser: varParser,
+    alphaConversion: varAlphaConversion,
+    needConversion,
+    substitution: varSubstitution,
+    evaluation: varEvaluation,
+    freeVarsCollector: varFreeVarsCollector,
+    print: varPrint,
+  } as pTermImplementation<varPtermType>,
 };
