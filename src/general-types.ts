@@ -4,7 +4,6 @@ import { SingleParser } from "@masala/parser";
 
 export interface generalPTerm {
   type: string;
-  [key: string]: unknown;
 }
 
 // Registry pattern: each variant extends this interface via declaration merging
@@ -14,93 +13,81 @@ export interface PTermRegistry {}
 // The union type is derived from all registered variants
 export type PTerm = PTermRegistry[keyof PTermRegistry];
 
-
 // Alpha conversion
 
-export type alphaConversionPartial<
-  Variant extends generalPTerm,
-  T extends generalPTerm
-> = (
-  recurse: (t: T, renaming: Map<string, string>) => T,
+export type alphaConversionPartial<Variant extends generalPTerm> = (
+  recurse: (t: PTerm, renaming: Map<string, string>) => PTerm,
   renaming: Map<string, string>,
   freshVarGen: () => string,
   t: Variant
-) => T;
+) => PTerm;
 
-export type needConversionPartial<
-  Variant extends generalPTerm,
-  T extends generalPTerm
-> = boolean | ((t: Variant, recurse: (t: T) => boolean) => boolean);
+export type needConversionPartial<Variant extends generalPTerm> =
+  | boolean
+  | ((t: Variant, recurse: (t: PTerm) => boolean) => boolean);
 
-export type parserPartial<
-  Variant extends generalPTerm,
-  T extends generalPTerm
-> = (recurse: SingleParser<T>) => SingleParser<Variant>;
+export type parserPartial<Variant extends generalPTerm> = (
+  recurse: SingleParser<PTerm>
+) => SingleParser<Variant>;
 
 // Substitution
 
-export type substitutionPartial<
-  Variant extends generalPTerm,
-  T extends generalPTerm
-> = (recurse: (t: T, v: string, t0: T) => T, v: string, t0: T, t: Variant) => T;
+export type substitutionPartial<Variant extends generalPTerm> = (
+  recurse: (t: PTerm, v: string, t0: PTerm) => PTerm,
+  v: string,
+  t0: PTerm,
+  t: Variant
+) => PTerm;
 
 // Evaluation
 
-export type State<T extends generalPTerm> = Map<string, T>;
+export type State<PTerm> = Map<string, PTerm>;
 
-export type evalContext<T extends generalPTerm> = {
-  term: T;
-  state: State<T>;
+export type evalContext<PTerm> = {
+  term: PTerm;
+  state: State<PTerm>;
 };
 
-export type evaluationPartial<
-  Variant extends generalPTerm,
-  T extends generalPTerm
-> = (
-  recurse: (ctx: evalContext<T>) => evalContext<T> | null,
-  state: State<T>
-) => (t: Variant) => evalContext<T> | null;
+export type evaluationPartial<Variant extends generalPTerm> = (
+  recurse: (ctx: evalContext<PTerm>) => evalContext<PTerm> | null,
+  state: State<PTerm>
+) => (t: Variant) => evalContext<PTerm> | null;
 
-export type FreeVarsCollectorPartial<
-  Variant extends generalPTerm,
-  T extends generalPTerm
-> = (recurse: (t: T) => Set<string>, t: Variant) => Set<string>;
+export type FreeVarsCollectorPartial<Variant extends generalPTerm> = (
+  recurse: (t: PTerm) => Set<string>,
+  t: Variant
+) => Set<string>;
 
 export type Environnement<Ty> = Map<string, Ty>;
 
 export type Equation<Ty> = ReadonlyArray<readonly [Ty, Ty]>;
 
-export type GenEquationPartial<
-  PTerm extends generalPTerm,
-  T extends PTerm,
-  Ty
-> = (
-  recurse: (t: T, ty: Ty, env: Environnement<Ty>) => Equation<Ty>,
+export type GenEquationPartial<Variant extends generalPTerm, Ty> = (
+  recurse: (t: PTerm, ty: Ty, env: Environnement<Ty>) => Equation<Ty>,
   targetType: Ty,
   env: Environnement<Ty>,
   freshTypeVar: () => Ty,
-  inference: (env: Environnement<Ty>, t: T) => Ty | null,
-  t: PTerm
+  inference: (env: Environnement<Ty>, t: PTerm) => Ty | null,
+  t: Variant
 ) => Equation<Ty>;
 
 // PTerm implementation
 // PTerm = the specific variant type (e.g., absPtermType)
-// T = the full union type (e.g., PTerm)
-// Constraint: the variant must be part of the union (PTerm extends T)
+// PTerm = the full union type (e.g., PTerm)
+// Constraint: the variant must be part of the union (PTerm extends PTerm)
 
 export type pTermImplementation<
   Variant extends generalPTerm,
-  Args extends unknown[],
-  T extends generalPTerm
+  Args extends unknown[]
 > = {
   pTermName: Variant["type"];
   constructor: (...args: Args) => Variant;
-  alphaConversion: alphaConversionPartial<Variant, T>;
-  needConversion: needConversionPartial<Variant, T>;
-  substitution: substitutionPartial<Variant, T>;
-  evaluation: evaluationPartial<Variant, T>;
-  freeVarsCollector: FreeVarsCollectorPartial<Variant, T>;
-  parser: parserPartial<Variant, T>;
+  alphaConversion: alphaConversionPartial<Variant>;
+  needConversion: needConversionPartial<Variant>;
+  substitution: substitutionPartial<Variant>;
+  evaluation: evaluationPartial<Variant>;
+  freeVarsCollector: FreeVarsCollectorPartial<Variant>;
+  parser: parserPartial<Variant>;
 };
 
 // PType implementation

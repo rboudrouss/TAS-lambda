@@ -5,8 +5,6 @@ import type { pTermImplementation, PTerm } from "../general-types.ts";
 
 const absPTermName = "Abs" as const;
 
-// Using interface for lazy evaluation (allows recursive type reference)
-// Index signature required for compatibility with generalPTerm
 interface absPtermType {
   readonly type: typeof absPTermName;
   readonly name: string;
@@ -21,7 +19,6 @@ function absConstructor(arg: { name: string; body: PTerm }): absPtermType {
   };
 }
 
-// Register this variant in the PTerm registry
 declare module "../general-types.ts" {
   interface PTermRegistry {
     Abs: absPtermType;
