@@ -73,13 +73,6 @@ const appSubstitution = (
   return appConstructor({ left: newLeft, right: newRight });
 };
 
-// Type guard for AbsTerm (needed for beta reduction)
-function isAbs(
-  t: PTerm
-): t is PTerm & { type: "Abs"; name: string; body: PTerm } {
-  return t.type === "Abs";
-}
-
 // Evaluation
 
 const appEvaluation =
@@ -98,17 +91,6 @@ const appEvaluation =
 
     const func = leftResult.term;
     const arg = rightResult.term;
-
-    //* / If left is an abstraction, perform beta reduction
-    if (isAbs(func)) {
-      // We need substitution - but we don't have access to it here
-      // This requires the evaluation to receive a substitute function
-      // For now, return the reduced application
-      return {
-        term: appConstructor({ left: func, right: arg }),
-        state: rightResult.state,
-      };
-    }
 
     return {
       term: appConstructor({ left: func, right: arg }),
