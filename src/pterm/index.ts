@@ -92,28 +92,30 @@ export function print(t: PTerm): string {
 // Evaluate to normal form
 export function evalToNormalForm(
   term: PTerm,
-  state: Map<string, PTerm> = new Map()
+  state: Map<string, PTerm> = new Map(),
+  maxSteps: number = 1000
 ): PTerm | null {
   const renamedTerm = alphaConvert(term);
 
-  const loop = (ctx: evalContext<PTerm>): PTerm => {
+  const loop = (ctx: evalContext<PTerm>, steps: number): PTerm => {
+    if (steps <= 0) {
+      return ctx.term;
+    }
+
     const nextCtx = evaluate(ctx);
 
-    // No more reductions possible - reached normal form
     if (nextCtx === null) {
       return ctx.term;
     }
 
-    // Prevent infinite loops on stuck terms
     if (nextCtx.term === ctx.term) {
       return ctx.term;
     }
 
-    // Continue reducing recursively
-    return loop(nextCtx);
+    return loop(nextCtx, steps - 1);
   };
 
-  return loop({ term: renamedTerm, state });
+  return loop({ term: renamedTerm, state }, maxSteps);
 }
 
 
