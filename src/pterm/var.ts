@@ -1,17 +1,16 @@
 import { SingleParser, F } from "@masala/parser";
-import type { pTermImplementation, generalPTerm, PTerm } from "../general-types.ts";
+import type { pTermImplementation, PTerm } from "../general-types.ts";
 
 // Definition
 
 const varPTermName = "Var" as const;
 
 function varConstructor(arg: { name: string }) {
-  return { type: varPTermName, name: arg.name } satisfies generalPTerm;
+  return { type: varPTermName, name: arg.name };
 }
 
 type varPtermType = ReturnType<typeof varConstructor>;
 
-// Register this variant in the PTerm registry
 declare module "../general-types.ts" {
   interface PTermRegistry {
     Var: varPtermType;
@@ -20,9 +19,7 @@ declare module "../general-types.ts" {
 
 // Parser
 
-const varParser = (
-  _recurse: SingleParser<PTerm>
-): SingleParser<varPtermType> =>
+const varParser = (_recurse: SingleParser<PTerm>): SingleParser<varPtermType> =>
   F.regex(/[a-zA-Z_][a-zA-Z0-9_]*/).map((m) => {
     return varConstructor({ name: m });
   });
@@ -70,8 +67,7 @@ const varFreeVarsCollector = (
 
 export const varPTermImplementation: pTermImplementation<
   varPtermType,
-  Parameters<typeof varConstructor>,
-  PTerm
+  Parameters<typeof varConstructor>
 > = {
   pTermName: varPTermName,
   constructor: varConstructor,
