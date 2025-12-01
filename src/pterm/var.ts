@@ -1,5 +1,5 @@
 import { SingleParser, F } from "@masala/parser";
-import type { pTermImplementation, generalPTerm } from "../general-types.ts";
+import type { pTermImplementation, generalPTerm, PTerm } from "../general-types.ts";
 
 // Definition
 
@@ -11,10 +11,17 @@ function varConstructor(arg: { name: string }) {
 
 type varPtermType = ReturnType<typeof varConstructor>;
 
+// Register this variant in the PTerm registry
+declare module "../general-types.ts" {
+  interface PTermRegistry {
+    Var: varPtermType;
+  }
+}
+
 // Parser
 
-const varParser = <T extends generalPTerm>(
-  _recurse: SingleParser<T>
+const varParser = (
+  _recurse: SingleParser<PTerm>
 ): SingleParser<varPtermType> =>
   F.regex(/[a-zA-Z_][a-zA-Z0-9_]*/).map((m) => {
     return varConstructor({ name: m });
@@ -22,52 +29,50 @@ const varParser = <T extends generalPTerm>(
 
 // Alpha conversion
 
-const varAlphaConversion = <T extends varPtermType>(
-  _recurse: (t: T, renaming: Map<string, string>) => T,
+const varAlphaConversion = (
+  _recurse: (t: PTerm, renaming: Map<string, string>) => PTerm,
   renaming: Map<string, string>,
   _freshVarGen: () => string,
   t: varPtermType
-): T => {
+): PTerm => {
   const newName = renaming.get(t.name);
-  return (newName ? { type: varPTermName, name: newName } : t) as T;
+  return newName ? varConstructor({ name: newName }) : t;
 };
 
 const needConversion = false;
 
 // Substitution
 
-const varSubstitution = <T extends generalPTerm>(
+const varSubstitution = (
   _recurse: unknown,
   v: string,
-  t0: T,
+  t0: PTerm,
   t: varPtermType
-): T => (t.name === v ? t0 : t) as T;
+): PTerm => (t.name === v ? t0 : t);
 
 // Evaluation
 
 const varEvaluation =
-  <T extends generalPTerm>(_recurse: unknown, state: Map<string, T>) =>
-  (t: varPtermType): { term: T; state: Map<string, T> } | null => {
+  (_recurse: unknown, state: Map<string, PTerm>) =>
+  (t: varPtermType): { term: PTerm; state: Map<string, PTerm> } | null => {
     const value = state.get(t.name);
     return value ? { term: value, state } : null;
   };
 
 // Free variables collector
 
-const varFreeVarsCollector = <T extends generalPTerm>(
-  _recurse: (t: T) => Set<string>,
+const varFreeVarsCollector = (
+  _recurse: (t: PTerm) => Set<string>,
   t: varPtermType
 ): Set<string> => new Set([t.name]);
 
 // Export
 
-export const varPTermImplementation = <
-  T extends varPtermType
->(): pTermImplementation<
+export const varPTermImplementation: pTermImplementation<
   varPtermType,
   Parameters<typeof varConstructor>,
-  T
-> => ({
+  PTerm
+> = {
   pTermName: varPTermName,
   constructor: varConstructor,
   parser: varParser,
@@ -76,4 +81,4 @@ export const varPTermImplementation = <
   substitution: varSubstitution,
   evaluation: varEvaluation,
   freeVarsCollector: varFreeVarsCollector,
-});
+};
