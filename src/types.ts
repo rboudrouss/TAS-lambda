@@ -22,10 +22,6 @@ export type alphaConversionPartial<Variant extends generalPTerm> = (
   t: Variant
 ) => PTerm;
 
-export type needConversionPartial<Variant extends generalPTerm> =
-  | boolean
-  | ((t: Variant, recurse: (t: PTerm) => boolean) => boolean);
-
 export type parserPartial<Variant extends generalPTerm> = (
   recurse: SingleParser<PTerm>
 ) => SingleParser<Variant>;
@@ -86,7 +82,6 @@ export type pTermImplementation<Variant extends generalPTerm> = {
   pTermName: Variant["type"];
   constructor: (args: Omit<Variant, "type">) => Variant;
   alphaConversion: alphaConversionPartial<Variant>;
-  needConversion: needConversionPartial<Variant>;
   substitution: substitutionPartial<Variant>;
   evaluation: evaluationPartial<Variant>;
   freeVarsCollector: FreeVarsCollectorPartial<Variant>;

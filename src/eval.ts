@@ -20,14 +20,6 @@ export function alphaConvert(
   return impl.alphaConversion(alphaConvert, renaming, freshVarGen, t);
 }
 
-// Check if term needs alpha conversion
-export function needsConversion(t: PTerm): boolean {
-  const impl = getImpl(t);
-  const need = impl.needConversion;
-  if (typeof need === "boolean") return need;
-  return need(t, needsConversion);
-}
-
 // Substitution
 export function substitute(t: PTerm, v: string, t0: PTerm): PTerm {
   const impl = getImpl(t);

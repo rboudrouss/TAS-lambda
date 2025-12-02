@@ -54,8 +54,6 @@ const absAlphaConversion = (
   return absConstructor({ name: freshName, body: newBody });
 };
 
-const needConversion = true;
-
 // Substitution
 
 const absSubstitution = (
@@ -104,7 +102,6 @@ export const absPTermImplementation = {
     constructor: absConstructor,
     parser: absParser,
     alphaConversion: absAlphaConversion,
-    needConversion,
     substitution: absSubstitution,
     evaluation: absEvaluation,
     freeVarsCollector: absFreeVarsCollector,

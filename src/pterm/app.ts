@@ -51,11 +51,6 @@ const appAlphaConversion = (
   return appConstructor({ left: newLeft, right: newRight });
 };
 
-const needConversion = (
-  t: appPtermType,
-  recurse: (t: PTerm) => boolean
-): boolean => recurse(t.left) || recurse(t.right);
-
 // Substitution
 
 const appSubstitution = (
@@ -122,7 +117,6 @@ export const appPTermImplementation = {
     constructor: appConstructor,
     parser: appParser,
     alphaConversion: appAlphaConversion,
-    needConversion,
     substitution: appSubstitution,
     evaluation: appEvaluation,
     freeVarsCollector: appFreeVarsCollector,

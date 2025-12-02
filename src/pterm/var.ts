@@ -36,8 +36,6 @@ const varAlphaConversion = (
   return newName ? varConstructor({ name: newName }) : t;
 };
 
-const needConversion = false;
-
 // Substitution
 
 const varSubstitution = (
@@ -76,7 +74,6 @@ export const varPTermImplementation = {
     constructor: varConstructor,
     parser: varParser,
     alphaConversion: varAlphaConversion,
-    needConversion,
     substitution: varSubstitution,
     evaluation: varEvaluation,
     freeVarsCollector: varFreeVarsCollector,
