@@ -4,7 +4,8 @@ import type {
   PTerm,
   PType,
   Environnement,
-  Equation,
+  InferContext,
+  InferResult,
 } from "../types.ts";
 import { arrowConstructor } from "../ptype/arrow.ts";
 
@@ -102,32 +103,32 @@ const absPrint = (recurse: (t: PTerm) => string, t: absPtermType): string =>
   `(fun ${t.name} -> ${recurse(t.body)})`;
 
 // Generate Equation (type inference)
-// For λx.M with target type τ:
-// - Create fresh type variables α (for x) and β (for body)
-// - Add x:α to the environment
-// - Recursively generate equations for M with target type β
-// - Generate equation: (α → β) = τ
+// Type inference (Algorithm W)
+// For λx.M: create fresh α for x, infer body, return (α → bodyType)
 
-const absGenEquation = (
-  recurse: (t: PTerm, ty: PType, env: Environnement<PType>) => Equation<PType>,
-  targetType: PType,
+const absInfer = (
+  recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
   env: Environnement<PType>,
-  freshTypeVar: () => PType,
+  ctx: InferContext,
   t: absPtermType
-): Equation<PType> => {
-  const argType = freshTypeVar();
-  const bodyType = freshTypeVar();
+): InferResult => {
+  const argType = ctx.freshTypeVar();
 
   // Extend environment with x : argType
   const newEnv = new Map(env);
   newEnv.set(t.name, argType);
 
-  // Generate equations for the body
-  const bodyEquations = recurse(t.body, bodyType, newEnv);
+  // Infer the body type
+  const bodyResult = recurse(t.body, newEnv, ctx);
+  if (!bodyResult.success) {
+    return bodyResult;
+  }
 
-  const arrowType = arrowConstructor({ left: argType, right: bodyType });
+  // Apply substitution to argType
+  const finalArgType = ctx.applySubst(bodyResult.substitution, argType);
+  const arrowType = arrowConstructor({ left: finalArgType, right: bodyResult.type });
 
-  return [...bodyEquations, [arrowType, targetType]];
+  return { success: true, type: arrowType, substitution: bodyResult.substitution };
 };
 
 // Export
@@ -142,6 +143,6 @@ export const absPTermImplementation = {
     evaluation: absEvaluation,
     freeVarsCollector: absFreeVarsCollector,
     print: absPrint,
-    genEquation: absGenEquation,
+    infer: absInfer,
   } as pTermImplementation<absPtermType>,
 };
