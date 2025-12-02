@@ -1,7 +1,8 @@
 #!/usr/bin/env -S deno run --allow-read
 
 import { Command } from "commander";
-import { parseTerm, evalToNormalForm, print } from "./pterm/index.ts";
+import { print, evalToNormalForm } from "./eval.ts";
+import { parseTerm } from "./parser.ts";
 
 const program = new Command();
 
@@ -13,7 +14,10 @@ program
 program
   .command("eval")
   .description("Evaluate a lambda calculus term")
-  .argument("<term>", "Lambda term to evaluate (e.g., '(\\x.x) y' or '(λx.x) y')")
+  .argument(
+    "<term>",
+    "Lambda term to evaluate (e.g., '(\\x.x) y' or '(λx.x) y')"
+  )
   .option("-s, --steps <number>", "Maximum evaluation steps", "1000")
   .action((term: string, options: { steps: string }) => {
     const maxSteps = parseInt(options.steps, 10);

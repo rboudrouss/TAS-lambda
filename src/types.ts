@@ -82,9 +82,7 @@ export type GenEquationPartial<Variant extends generalPTerm, Ty> = (
 // Variant = the specific variant type (e.g., absPtermType)
 // PTerm = the full union type (e.g., PTerm)
 
-export type pTermImplementation<
-  Variant extends generalPTerm,
-> = {
+export type pTermImplementation<Variant extends generalPTerm> = {
   pTermName: Variant["type"];
   constructor: (args: Omit<Variant, "type">) => Variant;
   alphaConversion: alphaConversionPartial<Variant>;

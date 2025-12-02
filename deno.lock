@@ -4,7 +4,8 @@
     "jsr:@std/assert@1": "1.0.10",
     "jsr:@std/internal@^1.0.5": "1.0.5",
     "npm:@masala/parser@^2.0.0-rc2": "2.0.0-rc2",
-    "npm:@types/node@*": "24.2.0"
+    "npm:@types/node@*": "24.2.0",
+    "npm:commander@^14.0.2": "14.0.2"
   },
   "jsr": {
     "@std/assert@1.0.10": {
@@ -27,6 +28,9 @@
         "undici-types"
       ]
     },
+    "commander@14.0.2": {
+      "integrity": "sha512-TywoWNNRbhoD0BXs1P3ZEScW8W5iKrnbithIl0YH+uCmBd0QpPOA8yc82DS3BIE5Ma6FnBVUsJ7wVUDz4dvOWQ=="
+    },
     "undici-types@7.10.0": {
       "integrity": "sha512-t5Fy/nfn+14LuOc2KNYg75vZqClpAiqscVvMygNnlsHBFpSXdJaYtXMcdNLpl/Qvc3P2cB3s6lOV51nqsFq4ag=="
     }
@@ -44,7 +48,8 @@
   "workspace": {
     "dependencies": [
       "jsr:@std/assert@1",
-      "npm:@masala/parser@^2.0.0-rc2"
+      "npm:@masala/parser@^2.0.0-rc2",
+      "npm:commander@^14.0.2"
     ]
   }
 }

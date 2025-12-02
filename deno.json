@@ -1,9 +1,11 @@
 {
   "tasks": {
-    "dev": "deno run --watch src/main.ts"
+    "dev": "deno run --watch src/main.ts",
+    "cli": "deno run --allow-env src/cli.ts"
   },
   "imports": {
     "@masala/parser": "npm:@masala/parser@^2.0.0-rc2",
-    "@std/assert": "jsr:@std/assert@1"
+    "@std/assert": "jsr:@std/assert@1",
+    "commander": "npm:commander@^14.0.2"
   }
 }

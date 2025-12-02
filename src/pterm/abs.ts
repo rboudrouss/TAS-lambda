@@ -1,5 +1,5 @@
 import { SingleParser, C, F } from "@masala/parser";
-import type { pTermImplementation, PTerm } from "../general-types.ts";
+import type { pTermImplementation, PTerm } from "../types.ts";
 
 // Definition
 
@@ -19,7 +19,7 @@ function absConstructor(arg: { name: string; body: PTerm }): absPtermType {
   };
 }
 
-declare module "../general-types.ts" {
+declare module "../types.ts" {
   interface PTermRegistry {
     [absPTermName]: absPtermType;
   }

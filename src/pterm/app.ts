@@ -1,9 +1,5 @@
 import { SingleParser, C, F } from "@masala/parser";
-import type {
-  pTermImplementation,
-  PTerm,
-  evalContext,
-} from "../general-types.ts";
+import type { pTermImplementation, PTerm, evalContext } from "../types.ts";
 
 // Definition
 
@@ -19,7 +15,7 @@ function appConstructor(arg: { left: PTerm; right: PTerm }): appPtermType {
   return { type: appPTermName, left: arg.left, right: arg.right };
 }
 
-declare module "../general-types.ts" {
+declare module "../types.ts" {
   interface PTermRegistry {
     [appPTermName]: appPtermType;
   }
@@ -72,7 +68,6 @@ const appSubstitution = (
   const newRight = recurse(t.right, v, t0);
   return appConstructor({ left: newLeft, right: newRight });
 };
-
 
 // Evaluation (call-by-value, left-to-right)
 // Note: Beta reduction is handled at the top level in evaluate()

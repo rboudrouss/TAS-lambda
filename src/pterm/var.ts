@@ -1,5 +1,5 @@
 import { SingleParser, F } from "@masala/parser";
-import type { pTermImplementation, PTerm } from "../general-types.ts";
+import type { pTermImplementation, PTerm } from "../types.ts";
 
 // Definition
 
@@ -11,7 +11,7 @@ function varConstructor(arg: { name: string }) {
 
 type varPtermType = ReturnType<typeof varConstructor>;
 
-declare module "../general-types.ts" {
+declare module "../types.ts" {
   interface PTermRegistry {
     [varPTermName]: varPtermType;
   }
@@ -65,10 +65,8 @@ const varFreeVarsCollector = (
 
 // Print
 
-const varPrint = (
-  _recurse: (t: PTerm) => string,
-  t: varPtermType
-): string => t.name;
+const varPrint = (_recurse: (t: PTerm) => string, t: varPtermType): string =>
+  t.name;
 
 // Export
 
