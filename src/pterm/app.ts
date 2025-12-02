@@ -73,29 +73,34 @@ const appSubstitution = (
   return appConstructor({ left: newLeft, right: newRight });
 };
 
-// Evaluation
 
+// Evaluation (call-by-value, left-to-right)
+// Note: Beta reduction is handled at the top level in evaluate()
 const appEvaluation =
   (
     recurse: (ctx: evalContext<PTerm>) => evalContext<PTerm> | null,
     state: Map<string, PTerm>
   ) =>
   (t: appPtermType): { term: PTerm; state: Map<string, PTerm> } | null => {
-    // First, evaluate the left side (the function)
+    // Try to evaluate the left side first
     const leftResult = recurse({ term: t.left, state });
-    if (!leftResult) return null;
+    if (leftResult && leftResult.term !== t.left) {
+      return {
+        term: appConstructor({ left: leftResult.term, right: t.right }),
+        state: leftResult.state,
+      };
+    }
 
-    // Then, evaluate the right side (the argument)
-    const rightResult = recurse({ term: t.right, state: leftResult.state });
-    if (!rightResult) return null;
+    // Then try to evaluate the right side
+    const rightResult = recurse({ term: t.right, state });
+    if (rightResult && rightResult.term !== t.right) {
+      return {
+        term: appConstructor({ left: t.left, right: rightResult.term }),
+        state: rightResult.state,
+      };
+    }
 
-    const func = leftResult.term;
-    const arg = rightResult.term;
-
-    return {
-      term: appConstructor({ left: func, right: arg }),
-      state: rightResult.state,
-    };
+    return null;
   };
 
 // Free variables collector
