@@ -84,6 +84,64 @@ export function generalize(ty: PType, env: Environnement<PType>): PType {
   return result;
 }
 
+// Check if a term is expansive (i.e., could produce side effects)
+// Expansive terms cannot be generalized (value restriction)
+export function isExpansive(term: PTerm): boolean {
+  switch (term.type) {
+    // Values are non-expansive
+    case "Var":
+    case "Abs":
+    case "Int":
+    case "Nil":
+    case "Unit":
+    case "Region":
+      return false;
+
+    // ref is expansive (creates a new reference)
+    case "Mkref":
+      return true;
+
+    // Application is expansive (could run arbitrary code)
+    case "App":
+      return true;
+
+    // Let is expansive if its value or body is expansive
+    case "Let":
+      return isExpansive(term.value) || isExpansive(term.body);
+
+    // Operators are expansive if their arguments are
+    case "Add":
+    case "Sub":
+      return isExpansive(term.left) || isExpansive(term.right);
+
+    case "Cons":
+      return isExpansive(term.head) || isExpansive(term.tail);
+
+    case "Head":
+    case "Tail":
+      return isExpansive(term.list);
+
+    case "Deref":
+      return isExpansive(term.expr);
+
+    case "Assign":
+      return isExpansive(term.ref) || isExpansive(term.value);
+
+    case "Izte":
+      return isExpansive(term.cond) || isExpansive(term.then) || isExpansive(term.else);
+
+    case "Iete":
+      return isExpansive(term.cond) || isExpansive(term.then) || isExpansive(term.else);
+
+    case "Fix":
+      return isExpansive(term.func);
+
+    default:
+      // Unknown terms are considered expansive for safety
+      return true;
+  }
+}
+
 // Replace quantified variables with fresh type variables
 export function instantiate(ty: PType): PType {
   if (ty.type === "Forall") {
@@ -166,9 +224,19 @@ function unifyTypes(
     return { success: true, type: t1, substitution: subst };
   }
 
+  // Both are Unit types
+  if (t1.type === "TUnit" && t2.type === "TUnit") {
+    return { success: true, type: t1, substitution: subst };
+  }
+
   // Both are List types
   if (t1.type === "TList" && t2.type === "TList") {
     return unifyTypes(t1.elem, t2.elem, subst, steps - 1);
+  }
+
+  // Both are Ref types
+  if (t1.type === "TRef" && t2.type === "TRef") {
+    return unifyTypes(t1.inner, t2.inner, subst, steps - 1);
   }
 
   // Incompatible types
@@ -210,6 +278,7 @@ export function inferType(
     instantiate,
     applySubst,
     applySubstToEnv,
+    isExpansive,
   };
   return infer(term, fullEnv, ctx);
 }

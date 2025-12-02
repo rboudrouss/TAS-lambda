@@ -1,0 +1,34 @@
+-- Example imperative program
+
+-- Define identity function
+let id = λx.x ;;
+
+-- Test identity
+id 42 ;;
+
+-- Create a mutable counter
+let counter = ref 0 ;;
+
+-- Increment
+:= counter (add (!counter) 1) ;;
+
+-- Check value
+!counter ;;
+
+-- Define sum function using fix
+let sum = fix λf.λn.ifz n then 0 else (add n (f (sub n 1))) ;;
+
+-- Calculate sum of 1 to 5
+sum 5 ;;
+
+-- List operations
+let mylist = cons 1 (cons 2 (cons 3 nil)) ;;
+
+-- Get head
+head mylist ;;
+
+-- Get length using fix
+let len = fix λf.λxs.ife xs then 0 else (add 1 (f (tail xs))) ;;
+
+len mylist ;;
+

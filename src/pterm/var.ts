@@ -31,6 +31,7 @@ const RESERVED_WORDS = new Set([
   "head", "tail", "cons", "nil",
   "ifz", "ife", "then", "else",
   "fix",
+  "ref",
 ]);
 
 // Parser

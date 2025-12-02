@@ -131,10 +131,13 @@ const letInfer = (
 
   const envAfterValue = ctx.applySubstToEnv(valueResult.substitution, env);
 
-  const generalizedType = ctx.generalize(valueResult.type, envAfterValue);
+  // Value restriction: only generalize non-expansive expressions
+  const valueType = ctx.isExpansive(t.value)
+    ? valueResult.type
+    : ctx.generalize(valueResult.type, envAfterValue);
 
   const newEnv = new Map(envAfterValue);
-  newEnv.set(t.name, generalizedType);
+  newEnv.set(t.name, valueType);
 
   const bodyResult = recurse(t.body, newEnv, ctx);
   if (!bodyResult.success) {

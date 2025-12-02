@@ -1,0 +1,11 @@
+-- This should fail with weak polymorphism
+-- let l = ref nil creates a monomorphic reference
+
+let l = ref nil ;;
+
+-- This should fail because l is not polymorphic
+:= l (cons (λx.x) nil) ;;
+
+-- This would try to use l as [Int] but it's [T -> T]
+(add (head (!l)) 2) ;;
+

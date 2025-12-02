@@ -19,11 +19,17 @@ function atomParser(): SingleParser<PTerm> {
     .or(F.try(registry.Add.parser(F.lazy(atomParser))))
     .or(F.try(registry.Sub.parser(F.lazy(atomParser))))
     .or(F.try(registry.Cons.parser(F.lazy(atomParser))))
+    // Imperative operators
+    .or(F.try(registry.Assign.parser(F.lazy(atomParser))))
+    .or(F.try(registry.Mkref.parser(F.lazy(atomParser))))
+    .or(F.try(registry.Deref.parser(F.lazy(atomParser))))
     // Unary operators - use atomParser for argument
     .or(F.try(registry.Head.parser(F.lazy(atomParser))))
     .or(F.try(registry.Tail.parser(F.lazy(atomParser))))
     .or(F.try(registry.Fix.parser(F.lazy(atomParser))))
     // Literals
+    .or(F.try(registry.Unit.parser(F.lazy(termParser))))
+    .or(F.try(registry.Region.parser(F.lazy(termParser))))
     .or(F.try(registry.Nil.parser(F.lazy(termParser))))
     .or(F.try(registry.Int.parser(F.lazy(termParser))))
     // Variables (must be last as it's the most general)

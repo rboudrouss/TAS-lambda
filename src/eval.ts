@@ -58,21 +58,30 @@ export function evalToNormalForm(
   state: Map<string, PTerm> = new Map(),
   maxSteps: number = 1000
 ): PTerm | null {
+  const result = evalToNormalFormWithState(term, state, maxSteps);
+  return result ? result.term : null;
+}
+
+export function evalToNormalFormWithState(
+  term: PTerm,
+  state: Map<string, PTerm> = new Map(),
+  maxSteps: number = 1000
+): evalContext<PTerm> | null {
   const renamedTerm = alphaConvert(term);
 
-  const loop = (ctx: evalContext<PTerm>, steps: number): PTerm => {
+  const loop = (ctx: evalContext<PTerm>, steps: number): evalContext<PTerm> => {
     if (steps <= 0) {
-      return ctx.term;
+      return ctx;
     }
 
     const nextCtx = evaluate(ctx);
 
     if (nextCtx === null) {
-      return ctx.term;
+      return ctx;
     }
 
     if (nextCtx.term === ctx.term) {
-      return ctx.term;
+      return ctx;
     }
 
     return loop(nextCtx, steps - 1);

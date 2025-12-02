@@ -15,6 +15,11 @@ import { consPTermImplementation } from "./cons.ts";
 import { iztePTermImplementation } from "./izte.ts";
 import { ietePTermImplementation } from "./iete.ts";
 import { fixPTermImplementation } from "./fix.ts";
+import { unitPTermImplementation } from "./unit.ts";
+import { regionPTermImplementation } from "./region.ts";
+import { derefPTermImplementation } from "./deref.ts";
+import { mkrefPTermImplementation } from "./mkref.ts";
+import { assignPTermImplementation } from "./assign.ts";
 
 // Collect all implementations
 const registry: {
@@ -34,6 +39,11 @@ const registry: {
   ...iztePTermImplementation,
   ...ietePTermImplementation,
   ...fixPTermImplementation,
+  ...unitPTermImplementation,
+  ...regionPTermImplementation,
+  ...derefPTermImplementation,
+  ...mkrefPTermImplementation,
+  ...assignPTermImplementation,
 } as const;
 
 export function getImpl<K extends PTerm["type"]>(

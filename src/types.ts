@@ -94,6 +94,7 @@ export type InferContext = {
   instantiate: (ty: PType) => PType;
   applySubst: (subst: Substitution, ty: PType) => PType;
   applySubstToEnv: (subst: Substitution, env: Environnement<PType>) => Environnement<PType>;
+  isExpansive: (t: PTerm) => boolean;
 };
 
 export type InferPartial<Variant extends generalPTerm> = (
