@@ -32,10 +32,8 @@ const tVarContainsVar = (
   ty: tVarType
 ): boolean => ty.name === varName;
 
-const tVarPrint = (
-  _recurse: (ty: PType) => string,
-  ty: tVarType
-): string => ty.name;
+const tVarPrint = (_recurse: (ty: PType) => string, ty: tVarType): string =>
+  ty.name;
 
 export const tVarPTypeImplementation = {
   [tVarPTypeName]: {
