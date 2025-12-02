@@ -1,15 +1,15 @@
 import type { PType, pTypeImplementation, PTypeRegistry } from "../types.ts";
 
-// Import all ptype variant implementations
 import { tVarPTypeImplementation } from "./var.ts";
 import { arrowPTypeImplementation } from "./arrow.ts";
+import { forallPTypeImplementation } from "./forall.ts";
 
-// Collect all implementations
 const registry: {
   [K in PType["type"]]: pTypeImplementation<PTypeRegistry[K]>;
 } = {
   ...tVarPTypeImplementation,
   ...arrowPTypeImplementation,
+  ...forallPTypeImplementation,
 } as const;
 
 export function getTypeImpl<K extends PType["type"]>(

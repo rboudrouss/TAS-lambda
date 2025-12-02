@@ -4,6 +4,7 @@ import type { PTerm, pTermImplementation, PTermRegistry } from "../types.ts";
 import { varPTermImplementation } from "./var.ts";
 import { absPTermImplementation } from "./abs.ts";
 import { appPTermImplementation } from "./app.ts";
+import { letPTermImplementation } from "./let.ts";
 
 // Collect all implementations
 const registry: {
@@ -12,6 +13,7 @@ const registry: {
   ...varPTermImplementation,
   ...absPTermImplementation,
   ...appPTermImplementation,
+  ...letPTermImplementation,
 } as const;
 
 export function getImpl<K extends PTerm["type"]>(

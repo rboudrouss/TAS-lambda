@@ -1,7 +1,7 @@
 import { SingleParser, F, C, Stream } from "@masala/parser";
 import { type PTerm, registry } from "./pterm/index.ts";
 
-// Atom parser: variable, abstraction, or parenthesized term
+// Atom parser
 function atomParser(): SingleParser<PTerm> {
   return F.try(
     C.char("(")
@@ -10,6 +10,7 @@ function atomParser(): SingleParser<PTerm> {
       .then(C.char(")").drop())
       .map((tuple) => tuple.at(0) as PTerm)
   )
+    .or(F.try(registry.Let.parser(F.lazy(termParser))))
     .or(F.try(registry.Abs.parser(F.lazy(termParser))))
     .or(registry.Var.parser(F.lazy(termParser)));
 }
