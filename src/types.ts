@@ -74,19 +74,34 @@ export type printPartial<Variant extends generalPTerm> = (
   t: Variant
 ) => string;
 
-// Type inference (equation generation)
+// Type inference (Algorithm W style)
 
 export type Environnement<Ty> = Map<string, Ty>;
 
-export type Equation<Ty> = ReadonlyArray<readonly [Ty, Ty]>;
+// Substitution: maps type variable names to types
+export type Substitution = Map<string, PType>;
 
-export type GenEquationPartial<Variant extends generalPTerm> = (
-  recurse: (t: PTerm, ty: PType, env: Environnement<PType>) => Equation<PType>,
-  targetType: PType,
+// Result of type inference
+export type InferResult =
+  | { success: true; type: PType; substitution: Substitution }
+  | { success: false; error: string };
+
+// Context passed to infer functions
+export type InferContext = {
+  freshTypeVar: () => PType;
+  unify: (t1: PType, t2: PType, subst: Substitution) => InferResult;
+  generalize: (ty: PType, env: Environnement<PType>) => PType;
+  instantiate: (ty: PType) => PType;
+  applySubst: (subst: Substitution, ty: PType) => PType;
+  applySubstToEnv: (subst: Substitution, env: Environnement<PType>) => Environnement<PType>;
+};
+
+export type InferPartial<Variant extends generalPTerm> = (
+  recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
   env: Environnement<PType>,
-  freshTypeVar: () => PType,
+  ctx: InferContext,
   t: Variant
-) => Equation<PType>;
+) => InferResult;
 
 export type pTermImplementation<Variant extends generalPTerm> = {
   pTermName: Variant["type"];
@@ -97,7 +112,7 @@ export type pTermImplementation<Variant extends generalPTerm> = {
   freeVarsCollector: FreeVarsCollectorPartial<Variant>;
   parser: parserPartial<Variant>;
   print: printPartial<Variant>;
-  genEquation: GenEquationPartial<Variant>;
+  infer: InferPartial<Variant>;
 };
 
 export type TypeFreeVarsCollectorPartial<Variant extends generalPType> = (
