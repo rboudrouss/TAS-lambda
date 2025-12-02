@@ -45,10 +45,7 @@ program
 program
   .command("type")
   .description("Type check a lambda calculus term")
-  .argument(
-    "<term>",
-    "Lambda term to type check (e.g., '\\x.x' or 'λx.x')"
-  )
+  .argument("<term>", "Lambda term to type check (e.g., '\\x.x' or 'λx.x')")
   .action((term: string) => {
     const parsed = parseTerm(term);
 

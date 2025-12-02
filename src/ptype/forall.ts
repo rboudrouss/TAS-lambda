@@ -18,7 +18,6 @@ declare module "../types.ts" {
   }
 }
 
-// Free vars: free vars of body minus the quantified variable
 const forallFreeVarsCollector = (
   recurse: (ty: PType) => Set<string>,
   ty: forallType
@@ -28,7 +27,6 @@ const forallFreeVarsCollector = (
   return bodyFreeVars;
 };
 
-// Substitution: substitute in body, but not if var is the one being substituted
 const forallTypeSubstitution = (
   recurse: (ty: PType, v: string, t0: PType) => PType,
   v: string,
@@ -41,7 +39,6 @@ const forallTypeSubstitution = (
   return forallConstructor({ var: ty.var, body: recurse(ty.body, v, t0) });
 };
 
-// Contains var: check body, but bound var shadows
 const forallContainsVar = (
   recurse: (varName: string, ty: PType) => boolean,
   varName: string,
@@ -53,7 +50,6 @@ const forallContainsVar = (
   return recurse(varName, ty.body);
 };
 
-// Print: ∀a. T
 const forallPrint = (recurse: (ty: PType) => string, ty: forallType): string =>
   `(∀${ty.var}. ${recurse(ty.body)})`;
 
@@ -69,4 +65,3 @@ export const forallPTypeImplementation = {
 };
 
 export { forallConstructor };
-

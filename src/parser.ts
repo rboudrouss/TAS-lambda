@@ -1,7 +1,6 @@
 import { SingleParser, F, C, Stream } from "@masala/parser";
 import { type PTerm, registry } from "./pterm/index.ts";
 
-// Atom parser
 function atomParser(): SingleParser<PTerm> {
   return F.try(
     C.char("(")
@@ -15,8 +14,6 @@ function atomParser(): SingleParser<PTerm> {
     .or(registry.Var.parser(F.lazy(termParser)));
 }
 
-// Term parser: handles application (left-associative)
-// Parses: atom (space+ atom)*
 export function termParser(): SingleParser<PTerm> {
   return F.lazy(atomParser)
     .then(C.char(" ").rep().drop().then(F.lazy(atomParser)).optrep())
@@ -24,7 +21,6 @@ export function termParser(): SingleParser<PTerm> {
       const first = tuple.at(0) as PTerm;
       const rest = tuple.array() as PTerm[];
 
-      // Filter out the first element (which we already have)
       const restTerms = rest.slice(1);
 
       if (restTerms.length === 0) {
@@ -39,7 +35,6 @@ export function termParser(): SingleParser<PTerm> {
     });
 }
 
-// Parse a string into a PTerm
 export function parseTerm(input: string): PTerm | null {
   const result = termParser().parse(Stream.ofChars(input.trim()));
   if (result.isAccepted()) {

@@ -8,8 +8,6 @@ import type {
   InferResult,
 } from "../types.ts";
 
-// Definition
-
 const letPTermName = "Let" as const;
 
 interface letPtermType {
@@ -19,8 +17,17 @@ interface letPtermType {
   readonly body: PTerm;
 }
 
-function letConstructor(arg: { name: string; value: PTerm; body: PTerm }): letPtermType {
-  return { type: letPTermName, name: arg.name, value: arg.value, body: arg.body };
+function letConstructor(arg: {
+  name: string;
+  value: PTerm;
+  body: PTerm;
+}): letPtermType {
+  return {
+    type: letPTermName,
+    name: arg.name,
+    value: arg.value,
+    body: arg.body,
+  };
 }
 
 declare module "../types.ts" {
@@ -28,9 +35,6 @@ declare module "../types.ts" {
     [letPTermName]: letPtermType;
   }
 }
-
-// Parser: let x = e1 in e2
-// "in" is a reserved word, so it won't be parsed as a variable
 
 const letParser = (recurse: SingleParser<PTerm>): SingleParser<letPtermType> =>
   C.string("let")
@@ -52,8 +56,6 @@ const letParser = (recurse: SingleParser<PTerm>): SingleParser<letPtermType> =>
       return letConstructor({ name, value, body });
     });
 
-// Alpha conversion
-
 const letAlphaConversion = (
   recurse: (t: PTerm, renaming: Map<string, string>) => PTerm,
   renaming: Map<string, string>,
@@ -67,8 +69,6 @@ const letAlphaConversion = (
   const newBody = recurse(t.body, newRenaming);
   return letConstructor({ name: freshName, value: newValue, body: newBody });
 };
-
-// Substitution
 
 const letSubstitution = (
   recurse: (t: PTerm, v: string, t0: PTerm) => PTerm,
@@ -84,21 +84,22 @@ const letSubstitution = (
   return letConstructor({ name: t.name, value: newValue, body: newBody });
 };
 
-// Evaluation: let x = v in e  =>  e[x := v]
-
 const letEvaluation =
-  (recurse: (ctx: { term: PTerm; state: Map<string, PTerm> }) => { term: PTerm; state: Map<string, PTerm> } | null, state: Map<string, PTerm>) =>
+  (
+    recurse: (ctx: {
+      term: PTerm;
+      state: Map<string, PTerm>;
+    }) => { term: PTerm; state: Map<string, PTerm> } | null,
+    state: Map<string, PTerm>
+  ) =>
   (t: letPtermType): { term: PTerm; state: Map<string, PTerm> } | null => {
-    // Evaluate value first
     const valueResult = recurse({ term: t.value, state });
     if (!valueResult) return null;
-    // Add binding and evaluate body
+
     const newState = new Map(valueResult.state);
     newState.set(t.name, valueResult.term);
     return recurse({ term: t.body, state: newState });
   };
-
-// Free variables collector
 
 const letFreeVarsCollector = (
   recurse: (t: PTerm) => Set<string>,
@@ -110,44 +111,41 @@ const letFreeVarsCollector = (
   return new Set([...valueFreeVars, ...bodyFreeVars]);
 };
 
-// Print
-
 const letPrint = (recurse: (t: PTerm) => string, t: letPtermType): string =>
   `(let ${t.name} = ${recurse(t.value)} in ${recurse(t.body)})`;
 
-// Type inference (Algorithm W)
-// For let x = e1 in e2: infer e1, generalize, extend env, infer e2
-
 const letInfer = (
-  recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
+  recurse: (
+    t: PTerm,
+    env: Environnement<PType>,
+    ctx: InferContext
+  ) => InferResult,
   env: Environnement<PType>,
   ctx: InferContext,
   t: letPtermType
 ): InferResult => {
-  // Infer the value type
   const valueResult = recurse(t.value, env, ctx);
   if (!valueResult.success) {
     return valueResult;
   }
 
-  // Apply substitution to environment before generalizing
   const envAfterValue = ctx.applySubstToEnv(valueResult.substitution, env);
 
-  // Generalize the value type
   const generalizedType = ctx.generalize(valueResult.type, envAfterValue);
 
-  // Extend environment with the generalized type
   const newEnv = new Map(envAfterValue);
   newEnv.set(t.name, generalizedType);
 
-  // Infer the body type
   const bodyResult = recurse(t.body, newEnv, ctx);
   if (!bodyResult.success) {
     return bodyResult;
   }
 
-  // Compose substitutions
-  const composedSubst = composeSubst(ctx, valueResult.substitution, bodyResult.substitution);
+  const composedSubst = composeSubst(
+    ctx,
+    valueResult.substitution,
+    bodyResult.substitution
+  );
   return { success: true, type: bodyResult.type, substitution: composedSubst };
 };
 
@@ -168,8 +166,6 @@ function composeSubst(
   return result;
 }
 
-// Export
-
 export const letPTermImplementation = {
   [letPTermName]: {
     pTermName: letPTermName,
@@ -185,4 +181,3 @@ export const letPTermImplementation = {
 };
 
 export { letConstructor };
-

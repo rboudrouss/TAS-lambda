@@ -1,4 +1,10 @@
-import type { Environnement, PType, InferContext, InferResult, Substitution } from "./types.ts";
+import type {
+  Environnement,
+  PType,
+  InferContext,
+  InferResult,
+  Substitution,
+} from "./types.ts";
 import { getImpl, type PTerm } from "./pterm/index.ts";
 import { getTypeImpl } from "./ptype/index.ts";
 import { tVarConstructor } from "./ptype/var.ts";
@@ -20,7 +26,11 @@ export function typeFreeVars(ty: PType): Set<string> {
   return impl.freeVarsCollector(typeFreeVars, ty);
 }
 
-export function typeSubstitute(ty: PType, varName: string, newType: PType): PType {
+export function typeSubstitute(
+  ty: PType,
+  varName: string,
+  newType: PType
+): PType {
   const impl = getTypeImpl(ty);
   return impl.typeSubstitution(typeSubstitute, varName, newType, ty);
 }
@@ -45,7 +55,10 @@ export function applySubst(subst: Substitution, ty: PType): PType {
 }
 
 // Apply a substitution to all types in an environment
-export function applySubstToEnv(subst: Substitution, env: Environnement<PType>): Environnement<PType> {
+export function applySubstToEnv(
+  subst: Substitution,
+  env: Environnement<PType>
+): Environnement<PType> {
   const result: Environnement<PType> = new Map();
   for (const [name, ty] of env) {
     result.set(name, applySubst(subst, ty));
@@ -92,7 +105,12 @@ export function unify(t1: PType, t2: PType, subst: Substitution): InferResult {
   return unifyTypes(type1, type2, subst, MAX_UNIFICATION_STEPS);
 }
 
-function unifyTypes(t1: PType, t2: PType, subst: Substitution, steps: number): InferResult {
+function unifyTypes(
+  t1: PType,
+  t2: PType,
+  subst: Substitution,
+  steps: number
+): InferResult {
   if (steps <= 0) {
     return { success: false, error: "Unification timeout" };
   }
@@ -105,7 +123,10 @@ function unifyTypes(t1: PType, t2: PType, subst: Substitution, steps: number): I
   // t1 is a type variable
   if (t1.type === "TVar") {
     if (typeContainsVar(t1.name, t2)) {
-      return { success: false, error: `Occurs check failed: ${t1.name} appears in ${printType(t2)}` };
+      return {
+        success: false,
+        error: `Occurs check failed: ${t1.name} appears in ${printType(t2)}`,
+      };
     }
     const newSubst = new Map(subst);
     newSubst.set(t1.name, t2);
@@ -115,7 +136,10 @@ function unifyTypes(t1: PType, t2: PType, subst: Substitution, steps: number): I
   // t2 is a type variable
   if (t2.type === "TVar") {
     if (typeContainsVar(t2.name, t1)) {
-      return { success: false, error: `Occurs check failed: ${t2.name} appears in ${printType(t1)}` };
+      return {
+        success: false,
+        error: `Occurs check failed: ${t2.name} appears in ${printType(t1)}`,
+      };
     }
     const newSubst = new Map(subst);
     newSubst.set(t2.name, t1);
@@ -138,23 +162,18 @@ function unifyTypes(t1: PType, t2: PType, subst: Substitution, steps: number): I
   }
 
   // Incompatible types
-  return { success: false, error: `Cannot unify ${printType(t1)} with ${printType(t2)}` };
-}
-
-// The inference context with all utilities
-function createInferContext(): InferContext {
   return {
-    freshTypeVar,
-    unify,
-    generalize,
-    instantiate,
-    applySubst,
-    applySubstToEnv,
+    success: false,
+    error: `Cannot unify ${printType(t1)} with ${printType(t2)}`,
   };
 }
 
 // Main infer function that dispatches to variant implementations
-function infer(term: PTerm, env: Environnement<PType>, ctx: InferContext): InferResult {
+function infer(
+  term: PTerm,
+  env: Environnement<PType>,
+  ctx: InferContext
+): InferResult {
   const impl = getImpl(term);
   return impl.infer(infer, env, ctx, term);
 }
@@ -174,7 +193,14 @@ export function inferType(
   resetTypeVarCounter();
   const freeVarEnv = buildFreeVarEnv(term);
   const fullEnv = new Map([...freeVarEnv, ...env]);
-  const ctx = createInferContext();
+  const ctx = {
+    freshTypeVar,
+    unify,
+    generalize,
+    instantiate,
+    applySubst,
+    applySubstToEnv,
+  };
   return infer(term, fullEnv, ctx);
 }
 
@@ -190,4 +216,3 @@ export function typeCheck(
     return `NOT TYPABLE: ${result.error}`;
   }
 }
-

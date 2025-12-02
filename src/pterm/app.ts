@@ -10,8 +10,6 @@ import type {
 } from "../types.ts";
 import { arrowConstructor } from "../ptype/arrow.ts";
 
-// Definition
-
 const appPTermName = "App" as const;
 
 interface appPtermType {
@@ -30,10 +28,8 @@ declare module "../types.ts" {
   }
 }
 
-// Parser
-// Note: Application parsing with left-associativity is typically handled
-// at a higher level. This parser expects explicit parentheses: (M N)
-
+// Note: Application parsing with left-associativity is handled at a higher
+// This parser expects explicit parentheses: (M N)
 const appParser = (recurse: SingleParser<PTerm>): SingleParser<appPtermType> =>
   C.char("(")
     .drop()
@@ -47,8 +43,6 @@ const appParser = (recurse: SingleParser<PTerm>): SingleParser<appPtermType> =>
       return appConstructor({ left, right });
     });
 
-// Alpha conversion
-
 const appAlphaConversion = (
   recurse: (t: PTerm, renaming: Map<string, string>) => PTerm,
   renaming: Map<string, string>,
@@ -59,8 +53,6 @@ const appAlphaConversion = (
   const newRight = recurse(t.right, renaming);
   return appConstructor({ left: newLeft, right: newRight });
 };
-
-// Substitution
 
 const appSubstitution = (
   recurse: (t: PTerm, v: string, t0: PTerm) => PTerm,
@@ -73,7 +65,7 @@ const appSubstitution = (
   return appConstructor({ left: newLeft, right: newRight });
 };
 
-// Evaluation (call-by-value, left-to-right)
+// Evaluation
 // Note: Beta reduction is handled at the top level in evaluate()
 const appEvaluation =
   (
@@ -102,8 +94,6 @@ const appEvaluation =
     return null;
   };
 
-// Free variables collector
-
 const appFreeVarsCollector = (
   recurse: (t: PTerm) => Set<string>,
   t: appPtermType
@@ -113,42 +103,33 @@ const appFreeVarsCollector = (
   return new Set([...leftFreeVars, ...rightFreeVars]);
 };
 
-// Print
-
 const appPrint = (recurse: (t: PTerm) => string, t: appPtermType): string =>
   `(${recurse(t.left)} ${recurse(t.right)})`;
 
 // Type inference (Algorithm W)
-// For (M N): infer M, infer N, unify M's type with (N's type → fresh), return fresh
-
+// For (M N): infer M, infer N, unify M's type with (N's type -> fresh), return fresh
 const appInfer = (
   recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
   env: Environnement<PType>,
   ctx: InferContext,
   t: appPtermType
 ): InferResult => {
-  // Infer type of left (function)
   const leftResult = recurse(t.left, env, ctx);
   if (!leftResult.success) {
     return leftResult;
   }
 
-  // Apply substitution to env before inferring right
   const envAfterLeft = ctx.applySubstToEnv(leftResult.substitution, env);
 
-  // Infer type of right (argument)
   const rightResult = recurse(t.right, envAfterLeft, ctx);
   if (!rightResult.success) {
     return rightResult;
   }
 
-  // Compose substitutions
   const composedSubst = composeSubst(ctx, leftResult.substitution, rightResult.substitution);
 
-  // Apply composed substitution to left's type
   const leftType = ctx.applySubst(rightResult.substitution, leftResult.type);
 
-  // Create fresh result type and unify left with (right → result)
   const resultType = ctx.freshTypeVar();
   const expectedFuncType = arrowConstructor({ left: rightResult.type, right: resultType });
 
@@ -157,7 +138,6 @@ const appInfer = (
     return unifyResult;
   }
 
-  // Apply final substitution to result type
   const finalType = ctx.applySubst(unifyResult.substitution, resultType);
   return { success: true, type: finalType, substitution: unifyResult.substitution };
 };
@@ -181,7 +161,6 @@ function composeSubst(
 }
 
 // Export
-
 export const appPTermImplementation = {
   [appPTermName]: {
     pTermName: appPTermName,

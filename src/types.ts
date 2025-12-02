@@ -19,11 +19,11 @@ export interface generalPType {
   type: string;
 }
 
-// Registry pattern: each variant extends this interface via declaration merging
+// Same as PTermRegistry
 // deno-lint-ignore no-empty-interface
 export interface PTypeRegistry {}
 
-// The union type is derived from all registered variants
+// Same as PTerm
 export type PType = PTypeRegistry[keyof PTypeRegistry];
 
 // Alpha conversion
@@ -74,11 +74,11 @@ export type printPartial<Variant extends generalPTerm> = (
   t: Variant
 ) => string;
 
-// Type inference (Algorithm W style)
+// Type inference (genre Algorithm W)
 
 export type Environnement<Ty> = Map<string, Ty>;
 
-// Substitution: maps type variable names to types
+// maps type variable names to types
 export type Substitution = Map<string, PType>;
 
 // Result of type inference

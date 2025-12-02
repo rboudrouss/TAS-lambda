@@ -30,9 +30,11 @@ const RESERVED_WORDS = new Set(["let", "in"]);
 // Parser
 
 const varParser = (_recurse: SingleParser<PTerm>): SingleParser<varPtermType> =>
-  F.regex(/[a-zA-Z_][a-zA-Z0-9_]*/).filter((m) => !RESERVED_WORDS.has(m)).map((m) => {
-    return varConstructor({ name: m });
-  });
+  F.regex(/[a-zA-Z_][a-zA-Z0-9_]*/)
+    .filter((m) => !RESERVED_WORDS.has(m))
+    .map((m) => {
+      return varConstructor({ name: m });
+    });
 
 // Alpha conversion
 
@@ -76,16 +78,20 @@ const varFreeVarsCollector = (
 const varPrint = (_recurse: (t: PTerm) => string, t: varPtermType): string =>
   t.name;
 
-// Type inference (Algorithm W)
-
+// Type inference
 const varInfer = (
-  _recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
+  _recurse: (
+    t: PTerm,
+    env: Environnement<PType>,
+    ctx: InferContext
+  ) => InferResult,
   env: Environnement<PType>,
   ctx: InferContext,
   t: varPtermType
 ): InferResult => {
   const varType = env.get(t.name);
   if (!varType) {
+    // should never happen since we asing a type to every free variable before inferring
     return { success: false, error: `Unbound variable: ${t.name}` };
   }
   // Instantiate polymorphic types

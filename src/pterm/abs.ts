@@ -9,8 +9,6 @@ import type {
 } from "../types.ts";
 import { arrowConstructor } from "../ptype/arrow.ts";
 
-// Definition
-
 const absPTermName = "Abs" as const;
 
 interface absPtermType {
@@ -33,8 +31,6 @@ declare module "../types.ts" {
   }
 }
 
-// Parser
-
 const absParser = (recurse: SingleParser<PTerm>): SingleParser<absPtermType> =>
   C.charIn("\\λ")
     .drop()
@@ -46,8 +42,6 @@ const absParser = (recurse: SingleParser<PTerm>): SingleParser<absPtermType> =>
       const body = tuple.at(1) as PTerm;
       return absConstructor({ name, body });
     });
-
-// Alpha conversion
 
 const absAlphaConversion = (
   recurse: (t: PTerm, renaming: Map<string, string>) => PTerm,
@@ -62,15 +56,12 @@ const absAlphaConversion = (
   return absConstructor({ name: freshName, body: newBody });
 };
 
-// Substitution
-
 const absSubstitution = (
   recurse: (t: PTerm, v: string, t0: PTerm) => PTerm,
   v: string,
   t0: PTerm,
   t: absPtermType
 ): PTerm => {
-  // If the variable being substituted is the bound variable, no substitution in body
   if (t.name === v) {
     return t;
   }
@@ -78,15 +69,11 @@ const absSubstitution = (
   return absConstructor({ name: t.name, body: newBody });
 };
 
-// Evaluation
-
 const absEvaluation =
   (_recurse: unknown, state: Map<string, PTerm>) =>
   (t: absPtermType): { term: PTerm; state: Map<string, PTerm> } | null => {
     return { term: t, state };
   };
-
-// Free variables collector
 
 const absFreeVarsCollector = (
   recurse: (t: PTerm) => Set<string>,
@@ -97,15 +84,11 @@ const absFreeVarsCollector = (
   return bodyFreeVars;
 };
 
-// Print
-
 const absPrint = (recurse: (t: PTerm) => string, t: absPtermType): string =>
   `(fun ${t.name} -> ${recurse(t.body)})`;
 
-// Generate Equation (type inference)
-// Type inference (Algorithm W)
-// For λx.M: create fresh α for x, infer body, return (α → bodyType)
-
+// Type inference
+// For \x.M: create fresh a for x, infer body, return (a -> bodyType)
 const absInfer = (
   recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
   env: Environnement<PType>,
@@ -114,24 +97,19 @@ const absInfer = (
 ): InferResult => {
   const argType = ctx.freshTypeVar();
 
-  // Extend environment with x : argType
   const newEnv = new Map(env);
   newEnv.set(t.name, argType);
 
-  // Infer the body type
   const bodyResult = recurse(t.body, newEnv, ctx);
   if (!bodyResult.success) {
     return bodyResult;
   }
 
-  // Apply substitution to argType
   const finalArgType = ctx.applySubst(bodyResult.substitution, argType);
   const arrowType = arrowConstructor({ left: finalArgType, right: bodyResult.type });
 
   return { success: true, type: arrowType, substitution: bodyResult.substitution };
 };
-
-// Export
 
 export const absPTermImplementation = {
   [absPTermName]: {
