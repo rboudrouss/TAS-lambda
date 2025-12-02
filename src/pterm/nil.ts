@@ -23,11 +23,9 @@ declare module "../types.ts" {
   }
 }
 
-// Parser: nil keyword
 const nilParser = (_recurse: SingleParser<PTerm>): SingleParser<nilPtermType> =>
   C.string("nil").map(() => nilConstructor({}));
 
-// Alpha conversion: no variables
 const nilAlphaConversion = (
   _recurse: (t: PTerm, renaming: Map<string, string>) => PTerm,
   _renaming: Map<string, string>,
@@ -35,7 +33,6 @@ const nilAlphaConversion = (
   t: nilPtermType
 ): PTerm => t;
 
-// Substitution: no variables
 const nilSubstitution = (
   _recurse: unknown,
   _v: string,
@@ -43,23 +40,19 @@ const nilSubstitution = (
   t: nilPtermType
 ): PTerm => t;
 
-// Evaluation: nil is a value
 const nilEvaluation =
   (_recurse: unknown, _state: Map<string, PTerm>) =>
   (_t: nilPtermType): { term: PTerm; state: Map<string, PTerm> } | null =>
     null;
 
-// Free variables: none
 const nilFreeVarsCollector = (
   _recurse: (t: PTerm) => Set<string>,
   _t: nilPtermType
 ): Set<string> => new Set();
 
-// Print
 const nilPrint = (_recurse: (t: PTerm) => string, _t: nilPtermType): string =>
   "nil";
 
-// Type inference: nil has type [a] for fresh a
 const nilInfer = (
   _recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
   _env: Environnement<PType>,

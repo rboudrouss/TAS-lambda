@@ -29,7 +29,6 @@ declare module "../types.ts" {
   }
 }
 
-// Parser: sub M N
 const subParser = (recurse: SingleParser<PTerm>): SingleParser<subPtermType> =>
   C.string("sub")
     .drop()
@@ -39,7 +38,6 @@ const subParser = (recurse: SingleParser<PTerm>): SingleParser<subPtermType> =>
     .then(F.lazy(() => recurse))
     .map((r) => subConstructor({ left: r.at(0) as PTerm, right: r.at(1) as PTerm }));
 
-// Alpha conversion
 const subAlphaConversion = (
   recurse: (t: PTerm, renaming: Map<string, string>) => PTerm,
   renaming: Map<string, string>,
@@ -51,7 +49,6 @@ const subAlphaConversion = (
     right: recurse(t.right, renaming),
   });
 
-// Substitution
 const subSubstitution = (
   recurse: (t: PTerm, v: string, t0: PTerm) => PTerm,
   v: string,
@@ -63,7 +60,6 @@ const subSubstitution = (
     right: recurse(t.right, v, t0),
   });
 
-// Evaluation: evaluate both, subtract if both are integers
 const subEvaluation =
   (recurse: (ctx: evalContext<PTerm>) => evalContext<PTerm> | null, state: Map<string, PTerm>) =>
   (t: subPtermType): evalContext<PTerm> | null => {
@@ -81,17 +77,14 @@ const subEvaluation =
     return null;
   };
 
-// Free variables
 const subFreeVarsCollector = (
   recurse: (t: PTerm) => Set<string>,
   t: subPtermType
 ): Set<string> => new Set([...recurse(t.left), ...recurse(t.right)]);
 
-// Print
 const subPrint = (recurse: (t: PTerm) => string, t: subPtermType): string =>
   `(${recurse(t.left)} - ${recurse(t.right)})`;
 
-// Type inference
 const subInfer = (
   recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
   env: Environnement<PType>,

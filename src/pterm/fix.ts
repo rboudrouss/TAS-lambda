@@ -27,7 +27,6 @@ declare module "../types.ts" {
   }
 }
 
-// Parser: fix F
 const fixParser = (recurse: SingleParser<PTerm>): SingleParser<fixPtermType> =>
   C.string("fix")
     .drop()
@@ -35,7 +34,6 @@ const fixParser = (recurse: SingleParser<PTerm>): SingleParser<fixPtermType> =>
     .then(F.lazy(() => recurse))
     .map((r) => fixConstructor({ func: r.at(0) as PTerm }));
 
-// Alpha conversion
 const fixAlphaConversion = (
   recurse: (t: PTerm, renaming: Map<string, string>) => PTerm,
   renaming: Map<string, string>,
@@ -43,7 +41,6 @@ const fixAlphaConversion = (
   t: fixPtermType
 ): PTerm => fixConstructor({ func: recurse(t.func, renaming) });
 
-// Substitution
 const fixSubstitution = (
   recurse: (t: PTerm, v: string, t0: PTerm) => PTerm,
   v: string,
@@ -65,18 +62,14 @@ const fixEvaluation =
     return null;
   };
 
-// Free variables
 const fixFreeVarsCollector = (
   recurse: (t: PTerm) => Set<string>,
   t: fixPtermType
 ): Set<string> => recurse(t.func);
 
-// Print
 const fixPrint = (recurse: (t: PTerm) => string, t: fixPtermType): string =>
   `(fix ${recurse(t.func)})`;
 
-// Type inference: fix has type (a → a) → a
-// If func has type (a → a), result is a
 const fixInfer = (
   recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
   env: Environnement<PType>,

@@ -27,7 +27,6 @@ declare module "../types.ts" {
   }
 }
 
-// Parser: head M
 const headParser = (recurse: SingleParser<PTerm>): SingleParser<headPtermType> =>
   C.string("head")
     .drop()
@@ -35,7 +34,6 @@ const headParser = (recurse: SingleParser<PTerm>): SingleParser<headPtermType> =
     .then(F.lazy(() => recurse))
     .map((r) => headConstructor({ list: r.at(0) as PTerm }));
 
-// Alpha conversion
 const headAlphaConversion = (
   recurse: (t: PTerm, renaming: Map<string, string>) => PTerm,
   renaming: Map<string, string>,
@@ -43,7 +41,6 @@ const headAlphaConversion = (
   t: headPtermType
 ): PTerm => headConstructor({ list: recurse(t.list, renaming) });
 
-// Substitution
 const headSubstitution = (
   recurse: (t: PTerm, v: string, t0: PTerm) => PTerm,
   v: string,
@@ -51,7 +48,6 @@ const headSubstitution = (
   t: headPtermType
 ): PTerm => headConstructor({ list: recurse(t.list, v, t0) });
 
-// Evaluation: evaluate list, get head if Cons
 const headEvaluation =
   (recurse: (ctx: evalContext<PTerm>) => evalContext<PTerm> | null, state: Map<string, PTerm>) =>
   (t: headPtermType): evalContext<PTerm> | null => {
@@ -65,17 +61,14 @@ const headEvaluation =
     return null;
   };
 
-// Free variables
 const headFreeVarsCollector = (
   recurse: (t: PTerm) => Set<string>,
   t: headPtermType
 ): Set<string> => recurse(t.list);
 
-// Print
 const headPrint = (recurse: (t: PTerm) => string, t: headPtermType): string =>
   `(head ${recurse(t.list)})`;
 
-// Type inference: list must be [a], result is a
 const headInfer = (
   recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
   env: Environnement<PType>,

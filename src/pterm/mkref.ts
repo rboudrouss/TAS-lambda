@@ -28,7 +28,6 @@ declare module "../types.ts" {
   }
 }
 
-// Parser: ref e
 const mkrefParser = (recurse: SingleParser<PTerm>): SingleParser<mkrefPtermType> =>
   C.string("ref")
     .drop()
@@ -36,7 +35,6 @@ const mkrefParser = (recurse: SingleParser<PTerm>): SingleParser<mkrefPtermType>
     .then(F.lazy(() => recurse))
     .map((r) => mkrefConstructor({ expr: r.at(0) as PTerm }));
 
-// Alpha conversion
 const mkrefAlphaConversion = (
   recurse: (t: PTerm, renaming: Map<string, string>) => PTerm,
   renaming: Map<string, string>,
@@ -44,7 +42,6 @@ const mkrefAlphaConversion = (
   t: mkrefPtermType
 ): PTerm => mkrefConstructor({ expr: recurse(t.expr, renaming) });
 
-// Substitution
 const mkrefSubstitution = (
   recurse: (t: PTerm, v: string, t0: PTerm) => PTerm,
   v: string,
@@ -52,13 +49,11 @@ const mkrefSubstitution = (
   t: mkrefPtermType
 ): PTerm => mkrefConstructor({ expr: recurse(t.expr, v, t0) });
 
-// Global region counter for fresh region creation
 let regionCounter = 0;
 export function resetRegionCounter() {
   regionCounter = 0;
 }
 
-// Evaluation: reduce expr, then create a new region
 const mkrefEvaluation =
   (recurse: (ctx: evalContext<PTerm>) => evalContext<PTerm> | null, state: Map<string, PTerm>) =>
   (t: mkrefPtermType): { term: PTerm; state: Map<string, PTerm> } | null => {
@@ -75,17 +70,14 @@ const mkrefEvaluation =
     return { term: regionConstructor({ id: newRegionId }), state: newState };
   };
 
-// Free variables
 const mkrefFreeVarsCollector = (
   recurse: (t: PTerm) => Set<string>,
   t: mkrefPtermType
 ): Set<string> => recurse(t.expr);
 
-// Print
 const mkrefPrint = (recurse: (t: PTerm) => string, t: mkrefPtermType): string =>
   `(ref ${recurse(t.expr)})`;
 
-// Type inference: ref e : Ref T where e : T
 const mkrefInfer = (
   recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
   env: Environnement<PType>,

@@ -45,7 +45,6 @@ export function printType(ty: PType): string {
   return impl.print(printType, ty);
 }
 
-// Apply a substitution to a type
 export function applySubst(subst: Substitution, ty: PType): PType {
   let result = ty;
   for (const [varName, newType] of subst) {
@@ -54,7 +53,6 @@ export function applySubst(subst: Substitution, ty: PType): PType {
   return result;
 }
 
-// Apply a substitution to all types in an environment
 export function applySubstToEnv(
   subst: Substitution,
   env: Environnement<PType>
@@ -66,7 +64,6 @@ export function applySubstToEnv(
   return result;
 }
 
-// Quantify over type variables not in the environment
 export function generalize(ty: PType, env: Environnement<PType>): PType {
   const envFreeVars = new Set<string>();
   for (const envTy of env.values()) {
@@ -84,7 +81,6 @@ export function generalize(ty: PType, env: Environnement<PType>): PType {
   return result;
 }
 
-// Check if a term is expansive (i.e., could produce side effects)
 // Expansive terms cannot be generalized (value restriction)
 export function isExpansive(term: PTerm): boolean {
   switch (term.type) {
@@ -142,7 +138,6 @@ export function isExpansive(term: PTerm): boolean {
   }
 }
 
-// Replace quantified variables with fresh type variables
 export function instantiate(ty: PType): PType {
   if (ty.type === "Forall") {
     const fresh = freshTypeVar();
@@ -154,9 +149,7 @@ export function instantiate(ty: PType): PType {
 
 const MAX_UNIFICATION_STEPS = 1000;
 
-// Unify two types, extending the given substitution
 export function unify(t1: PType, t2: PType, subst: Substitution): InferResult {
-  // Apply current substitution to both types
   const type1 = applySubst(subst, t1);
   const type2 = applySubst(subst, t2);
 
@@ -246,7 +239,6 @@ function unifyTypes(
   };
 }
 
-// Main infer function that dispatches to variant implementations
 function infer(
   term: PTerm,
   env: Environnement<PType>,

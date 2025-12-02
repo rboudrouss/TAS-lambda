@@ -30,9 +30,7 @@ declare module "../types.ts" {
   }
 }
 
-// Parser: e1 := e2 - this is tricky, we parse it as infix
-// For simplicity, we'll use a prefix form in atomParser: (:= e1 e2)
-// But the print will show e1 := e2
+// pour simplifier on parse en préfixe (:= e1 e2)
 const assignParser = (recurse: SingleParser<PTerm>): SingleParser<assignPtermType> =>
   C.string(":=")
     .drop()
@@ -42,7 +40,6 @@ const assignParser = (recurse: SingleParser<PTerm>): SingleParser<assignPtermTyp
     .then(F.lazy(() => recurse))
     .map((r) => assignConstructor({ ref: r.at(0) as PTerm, value: r.at(1) as PTerm }));
 
-// Alpha conversion
 const assignAlphaConversion = (
   recurse: (t: PTerm, renaming: Map<string, string>) => PTerm,
   renaming: Map<string, string>,
@@ -53,7 +50,6 @@ const assignAlphaConversion = (
   value: recurse(t.value, renaming),
 });
 
-// Substitution
 const assignSubstitution = (
   recurse: (t: PTerm, v: string, t0: PTerm) => PTerm,
   v: string,
@@ -64,21 +60,17 @@ const assignSubstitution = (
   value: recurse(t.value, v, t0),
 });
 
-// Evaluation: reduce ref first, then value, then assign
 const assignEvaluation =
   (recurse: (ctx: evalContext<PTerm>) => evalContext<PTerm> | null, state: Map<string, PTerm>) =>
   (t: assignPtermType): { term: PTerm; state: Map<string, PTerm> } | null => {
-    // Try to reduce ref
     const refResult = recurse({ term: t.ref, state });
     if (refResult) {
       return { term: assignConstructor({ ref: refResult.term, value: t.value }), state: refResult.state };
     }
-    // Try to reduce value
     const valueResult = recurse({ term: t.value, state });
     if (valueResult) {
       return { term: assignConstructor({ ref: t.ref, value: valueResult.term }), state: valueResult.state };
     }
-    // Both are values, check if ref is a region
     if (t.ref.type === "Region") {
       const regionKey = `ρ${t.ref.id}`;
       const newState = new Map(state);
@@ -88,17 +80,15 @@ const assignEvaluation =
     return null;
   };
 
-// Free variables
 const assignFreeVarsCollector = (
   recurse: (t: PTerm) => Set<string>,
   t: assignPtermType
 ): Set<string> => new Set([...recurse(t.ref), ...recurse(t.value)]);
 
-// Print
 const assignPrint = (recurse: (t: PTerm) => string, t: assignPtermType): string =>
   `(${recurse(t.ref)} := ${recurse(t.value)})`;
 
-// Type inference: e1 := e2 : Unit where e1 : Ref T and e2 : T
+// Type inference Unit where e1 : Ref T and e2 : T
 const assignInfer = (
   recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
   env: Environnement<PType>,

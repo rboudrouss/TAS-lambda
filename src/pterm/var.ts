@@ -8,8 +8,6 @@ import type {
   InferResult,
 } from "../types.ts";
 
-// Definition
-
 const varPTermName = "Var" as const;
 
 function varConstructor(arg: { name: string }) {
@@ -24,7 +22,6 @@ declare module "../types.ts" {
   }
 }
 
-// Reserved words that cannot be used as variable names
 const RESERVED_WORDS = new Set([
   "let", "in",
   "add", "sub",
@@ -34,16 +31,12 @@ const RESERVED_WORDS = new Set([
   "ref",
 ]);
 
-// Parser
-
 const varParser = (_recurse: SingleParser<PTerm>): SingleParser<varPtermType> =>
   F.regex(/[a-zA-Z_][a-zA-Z0-9_]*/)
     .filter((m) => !RESERVED_WORDS.has(m))
     .map((m) => {
       return varConstructor({ name: m });
     });
-
-// Alpha conversion
 
 const varAlphaConversion = (
   _recurse: (t: PTerm, renaming: Map<string, string>) => PTerm,
@@ -55,16 +48,12 @@ const varAlphaConversion = (
   return newName ? varConstructor({ name: newName }) : t;
 };
 
-// Substitution
-
 const varSubstitution = (
   _recurse: unknown,
   v: string,
   t0: PTerm,
   t: varPtermType
 ): PTerm => (t.name === v ? t0 : t);
-
-// Evaluation
 
 const varEvaluation =
   (_recurse: unknown, state: Map<string, PTerm>) =>
@@ -73,19 +62,14 @@ const varEvaluation =
     return value ? { term: value, state } : null;
   };
 
-// Free variables collector
-
 const varFreeVarsCollector = (
   _recurse: (t: PTerm) => Set<string>,
   t: varPtermType
 ): Set<string> => new Set([t.name]);
 
-// Print
-
 const varPrint = (_recurse: (t: PTerm) => string, t: varPtermType): string =>
   t.name;
 
-// Type inference
 const varInfer = (
   _recurse: (
     t: PTerm,
@@ -105,8 +89,6 @@ const varInfer = (
   const instType = ctx.instantiate(varType);
   return { success: true, type: instType, substitution: new Map() };
 };
-
-// Export
 
 export const varPTermImplementation = {
   [varPTermName]: {

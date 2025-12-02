@@ -28,7 +28,7 @@ declare module "../types.ts" {
   }
 }
 
-// Parser: cons M N
+// cons M N
 const consParser = (recurse: SingleParser<PTerm>): SingleParser<consPtermType> =>
   C.string("cons")
     .drop()
@@ -38,7 +38,6 @@ const consParser = (recurse: SingleParser<PTerm>): SingleParser<consPtermType> =
     .then(F.lazy(() => recurse))
     .map((r) => consConstructor({ head: r.at(0) as PTerm, tail: r.at(1) as PTerm }));
 
-// Alpha conversion
 const consAlphaConversion = (
   recurse: (t: PTerm, renaming: Map<string, string>) => PTerm,
   renaming: Map<string, string>,
@@ -50,7 +49,6 @@ const consAlphaConversion = (
     tail: recurse(t.tail, renaming),
   });
 
-// Substitution
 const consSubstitution = (
   recurse: (t: PTerm, v: string, t0: PTerm) => PTerm,
   v: string,
@@ -62,7 +60,6 @@ const consSubstitution = (
     tail: recurse(t.tail, v, t0),
   });
 
-// Evaluation: evaluate both head and tail (call-by-value)
 const consEvaluation =
   (recurse: (ctx: evalContext<PTerm>) => evalContext<PTerm> | null, state: Map<string, PTerm>) =>
   (t: consPtermType): evalContext<PTerm> | null => {
@@ -77,17 +74,15 @@ const consEvaluation =
     return null;
   };
 
-// Free variables
 const consFreeVarsCollector = (
   recurse: (t: PTerm) => Set<string>,
   t: consPtermType
 ): Set<string> => new Set([...recurse(t.head), ...recurse(t.tail)]);
 
-// Print
 const consPrint = (recurse: (t: PTerm) => string, t: consPtermType): string =>
   `(cons ${recurse(t.head)} ${recurse(t.tail)})`;
 
-// Type inference: head has type a, tail has type [a], result is [a]
+// Type inference head has type a, tail has type [a], result is [a]
 const consInfer = (
   recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
   env: Environnement<PType>,

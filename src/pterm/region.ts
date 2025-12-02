@@ -23,14 +23,13 @@ declare module "../types.ts" {
   }
 }
 
-// Parser: ρ0, ρ1, etc. (regions are runtime values, not usually parsed from user input)
+// Regions are runtime values, not usually parsed from user input
 const regionParser = (_recurse: SingleParser<PTerm>): SingleParser<regionPtermType> =>
   F.regex(/ρ([0-9]+)/).map((m) => {
     const match = m.match(/ρ([0-9]+)/);
     return regionConstructor({ id: parseInt(match![1], 10) });
   });
 
-// Alpha conversion: no variables
 const regionAlphaConversion = (
   _recurse: (t: PTerm, renaming: Map<string, string>) => PTerm,
   _renaming: Map<string, string>,
@@ -38,7 +37,6 @@ const regionAlphaConversion = (
   t: regionPtermType
 ): PTerm => t;
 
-// Substitution: no variables
 const regionSubstitution = (
   _recurse: unknown,
   _v: string,
@@ -46,24 +44,20 @@ const regionSubstitution = (
   t: regionPtermType
 ): PTerm => t;
 
-// Evaluation: regions are values
 const regionEvaluation =
   (_recurse: unknown, _state: Map<string, PTerm>) =>
   (_t: regionPtermType): { term: PTerm; state: Map<string, PTerm> } | null =>
     null;
 
-// Free variables: none
 const regionFreeVarsCollector = (
   _recurse: (t: PTerm) => Set<string>,
   _t: regionPtermType
 ): Set<string> => new Set();
 
-// Print
 const regionPrint = (_recurse: (t: PTerm) => string, t: regionPtermType): string =>
   `ρ${t.id}`;
 
-// Type inference: regions have type Ref T (but T is unknown at creation time)
-// In practice, regions are created by ref and their type is inferred from context
+// Regions are created by ref and their type is inferred from context
 const regionInfer = (
   _recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
   _env: Environnement<PType>,

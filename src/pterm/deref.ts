@@ -34,7 +34,6 @@ const derefParser = (recurse: SingleParser<PTerm>): SingleParser<derefPtermType>
     .then(F.lazy(() => recurse))
     .map((r) => derefConstructor({ expr: r.at(0) as PTerm }));
 
-// Alpha conversion
 const derefAlphaConversion = (
   recurse: (t: PTerm, renaming: Map<string, string>) => PTerm,
   renaming: Map<string, string>,
@@ -42,7 +41,6 @@ const derefAlphaConversion = (
   t: derefPtermType
 ): PTerm => derefConstructor({ expr: recurse(t.expr, renaming) });
 
-// Substitution
 const derefSubstitution = (
   recurse: (t: PTerm, v: string, t0: PTerm) => PTerm,
   v: string,
@@ -50,16 +48,13 @@ const derefSubstitution = (
   t: derefPtermType
 ): PTerm => derefConstructor({ expr: recurse(t.expr, v, t0) });
 
-// Evaluation: reduce expr first, if it's a region, look up in state
 const derefEvaluation =
   (recurse: (ctx: evalContext<PTerm>) => evalContext<PTerm> | null, state: Map<string, PTerm>) =>
   (t: derefPtermType): { term: PTerm; state: Map<string, PTerm> } | null => {
-    // Try to reduce expr
     const exprResult = recurse({ term: t.expr, state });
     if (exprResult) {
       return { term: derefConstructor({ expr: exprResult.term }), state: exprResult.state };
     }
-    // expr is a value, check if it's a region
     if (t.expr.type === "Region") {
       const regionKey = `ρ${t.expr.id}`;
       const value = state.get(regionKey);
@@ -70,17 +65,14 @@ const derefEvaluation =
     return null;
   };
 
-// Free variables
 const derefFreeVarsCollector = (
   recurse: (t: PTerm) => Set<string>,
   t: derefPtermType
 ): Set<string> => recurse(t.expr);
 
-// Print
 const derefPrint = (recurse: (t: PTerm) => string, t: derefPtermType): string =>
   `!${recurse(t.expr)}`;
 
-// Type inference: !e : T where e : Ref T
 const derefInfer = (
   recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
   env: Environnement<PType>,

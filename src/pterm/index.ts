@@ -1,6 +1,5 @@
 import type { PTerm, pTermImplementation, PTermRegistry } from "../types.ts";
 
-// Import all pterm variant implementations
 import { varPTermImplementation } from "./var.ts";
 import { absPTermImplementation } from "./abs.ts";
 import { appPTermImplementation } from "./app.ts";
@@ -21,7 +20,6 @@ import { derefPTermImplementation } from "./deref.ts";
 import { mkrefPTermImplementation } from "./mkref.ts";
 import { assignPTermImplementation } from "./assign.ts";
 
-// Collect all implementations
 const registry: {
   [K in PTerm["type"]]: pTermImplementation<PTermRegistry[K]>;
 } = {

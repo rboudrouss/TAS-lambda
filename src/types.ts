@@ -1,32 +1,22 @@
 import { SingleParser } from "@masala/parser";
 
-// PTerm definition
-
 export interface generalPTerm {
   type: string;
 }
 
-// Registry pattern: each variant extends this interface via declaration merging
 // deno-lint-ignore no-empty-interface
 export interface PTermRegistry {}
 
-// The union type is derived from all registered variants
 export type PTerm = PTermRegistry[keyof PTermRegistry];
-
-// PType definition
 
 export interface generalPType {
   type: string;
 }
 
-// Same as PTermRegistry
 // deno-lint-ignore no-empty-interface
 export interface PTypeRegistry {}
 
-// Same as PTerm
 export type PType = PTypeRegistry[keyof PTypeRegistry];
-
-// Alpha conversion
 
 export type alphaConversionPartial<Variant extends generalPTerm> = (
   recurse: (t: PTerm, renaming: Map<string, string>) => PTerm,
@@ -39,16 +29,12 @@ export type parserPartial<Variant extends generalPTerm> = (
   recurse: SingleParser<PTerm>
 ) => SingleParser<Variant>;
 
-// Substitution
-
 export type substitutionPartial<Variant extends generalPTerm> = (
   recurse: (t: PTerm, v: string, t0: PTerm) => PTerm,
   v: string,
   t0: PTerm,
   t: Variant
 ) => PTerm;
-
-// Evaluation
 
 export type State<T> = Map<string, T>;
 
@@ -67,26 +53,19 @@ export type FreeVarsCollectorPartial<Variant extends generalPTerm> = (
   t: Variant
 ) => Set<string>;
 
-// Print
-
 export type printPartial<Variant extends generalPTerm> = (
   recurse: (t: PTerm) => string,
   t: Variant
 ) => string;
 
-// Type inference (genre Algorithm W)
-
 export type Environnement<Ty> = Map<string, Ty>;
 
-// maps type variable names to types
 export type Substitution = Map<string, PType>;
 
-// Result of type inference
 export type InferResult =
   | { success: true; type: PType; substitution: Substitution }
   | { success: false; error: string };
 
-// Context passed to infer functions
 export type InferContext = {
   freshTypeVar: () => PType;
   unify: (t1: PType, t2: PType, subst: Substitution) => InferResult;

@@ -27,7 +27,6 @@ declare module "../types.ts" {
   }
 }
 
-// Parser: tail M
 const tailParser = (recurse: SingleParser<PTerm>): SingleParser<tailPtermType> =>
   C.string("tail")
     .drop()
@@ -35,7 +34,6 @@ const tailParser = (recurse: SingleParser<PTerm>): SingleParser<tailPtermType> =
     .then(F.lazy(() => recurse))
     .map((r) => tailConstructor({ list: r.at(0) as PTerm }));
 
-// Alpha conversion
 const tailAlphaConversion = (
   recurse: (t: PTerm, renaming: Map<string, string>) => PTerm,
   renaming: Map<string, string>,
@@ -43,7 +41,6 @@ const tailAlphaConversion = (
   t: tailPtermType
 ): PTerm => tailConstructor({ list: recurse(t.list, renaming) });
 
-// Substitution
 const tailSubstitution = (
   recurse: (t: PTerm, v: string, t0: PTerm) => PTerm,
   v: string,
@@ -51,7 +48,6 @@ const tailSubstitution = (
   t: tailPtermType
 ): PTerm => tailConstructor({ list: recurse(t.list, v, t0) });
 
-// Evaluation: evaluate list, get tail if Cons
 const tailEvaluation =
   (recurse: (ctx: evalContext<PTerm>) => evalContext<PTerm> | null, state: Map<string, PTerm>) =>
   (t: tailPtermType): evalContext<PTerm> | null => {
@@ -65,17 +61,14 @@ const tailEvaluation =
     return null;
   };
 
-// Free variables
 const tailFreeVarsCollector = (
   recurse: (t: PTerm) => Set<string>,
   t: tailPtermType
 ): Set<string> => recurse(t.list);
 
-// Print
 const tailPrint = (recurse: (t: PTerm) => string, t: tailPtermType): string =>
   `(tail ${recurse(t.list)})`;
 
-// Type inference: list must be [a], result is [a]
 const tailInfer = (
   recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
   env: Environnement<PType>,

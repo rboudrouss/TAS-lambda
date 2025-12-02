@@ -87,8 +87,6 @@ const absFreeVarsCollector = (
 const absPrint = (recurse: (t: PTerm) => string, t: absPtermType): string =>
   `(fun ${t.name} -> ${recurse(t.body)})`;
 
-// Type inference
-// For \x.M: create fresh a for x, infer body, return (a -> bodyType)
 const absInfer = (
   recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
   env: Environnement<PType>,

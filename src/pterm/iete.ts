@@ -29,7 +29,6 @@ declare module "../types.ts" {
   }
 }
 
-// Parser: ife C then T else E
 const ieteParser = (recurse: SingleParser<PTerm>): SingleParser<ietePtermType> =>
   C.string("ife")
     .drop()
@@ -49,7 +48,6 @@ const ieteParser = (recurse: SingleParser<PTerm>): SingleParser<ietePtermType> =
       else: r.at(2) as PTerm,
     }));
 
-// Alpha conversion
 const ieteAlphaConversion = (
   recurse: (t: PTerm, renaming: Map<string, string>) => PTerm,
   renaming: Map<string, string>,
@@ -62,7 +60,6 @@ const ieteAlphaConversion = (
     else: recurse(t.else, renaming),
   });
 
-// Substitution
 const ieteSubstitution = (
   recurse: (t: PTerm, v: string, t0: PTerm) => PTerm,
   v: string,
@@ -75,7 +72,6 @@ const ieteSubstitution = (
     else: recurse(t.else, v, t0),
   });
 
-// Evaluation: evaluate cond first, then pick branch (don't evaluate branches until chosen)
 const ieteEvaluation =
   (recurse: (ctx: evalContext<PTerm>) => evalContext<PTerm> | null, state: Map<string, PTerm>) =>
   (t: ietePtermType): evalContext<PTerm> | null => {
@@ -94,17 +90,14 @@ const ieteEvaluation =
     return null;
   };
 
-// Free variables
 const ieteFreeVarsCollector = (
   recurse: (t: PTerm) => Set<string>,
   t: ietePtermType
 ): Set<string> => new Set([...recurse(t.cond), ...recurse(t.then), ...recurse(t.else)]);
 
-// Print
 const ietePrint = (recurse: (t: PTerm) => string, t: ietePtermType): string =>
   `(ife ${recurse(t.cond)} then ${recurse(t.then)} else ${recurse(t.else)})`;
 
-// Type inference: cond must be [a], then and else must have same type
 const ieteInfer = (
   recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
   env: Environnement<PType>,

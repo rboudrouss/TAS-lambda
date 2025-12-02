@@ -11,19 +11,18 @@ function atomParser(): SingleParser<PTerm> {
   )
     .or(F.try(registry.Let.parser(F.lazy(termParser))))
     .or(F.try(registry.Abs.parser(F.lazy(termParser))))
-    // Branching operators (must come before simpler parsers)
-    // These use atomParser for their arguments to avoid application ambiguity
+    // Branching - use atomParser for arguments to avoid application ambiguity
     .or(F.try(registry.Izte.parser(F.lazy(atomParser))))
     .or(F.try(registry.Iete.parser(F.lazy(atomParser))))
-    // Binary operators - use atomParser for arguments
+    // Binary operators
     .or(F.try(registry.Add.parser(F.lazy(atomParser))))
     .or(F.try(registry.Sub.parser(F.lazy(atomParser))))
     .or(F.try(registry.Cons.parser(F.lazy(atomParser))))
-    // Imperative operators
+    // Imperative
     .or(F.try(registry.Assign.parser(F.lazy(atomParser))))
     .or(F.try(registry.Mkref.parser(F.lazy(atomParser))))
     .or(F.try(registry.Deref.parser(F.lazy(atomParser))))
-    // Unary operators - use atomParser for argument
+    // Unary
     .or(F.try(registry.Head.parser(F.lazy(atomParser))))
     .or(F.try(registry.Tail.parser(F.lazy(atomParser))))
     .or(F.try(registry.Fix.parser(F.lazy(atomParser))))
@@ -32,7 +31,7 @@ function atomParser(): SingleParser<PTerm> {
     .or(F.try(registry.Region.parser(F.lazy(termParser))))
     .or(F.try(registry.Nil.parser(F.lazy(termParser))))
     .or(F.try(registry.Int.parser(F.lazy(termParser))))
-    // Variables (must be last as it's the most general)
+    // Variables must be last as it's the most general
     .or(registry.Var.parser(F.lazy(termParser)));
 }
 

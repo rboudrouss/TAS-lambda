@@ -142,7 +142,7 @@ const appInfer = (
   return { success: true, type: finalType, substitution: unifyResult.substitution };
 };
 
-// Compose two substitutions: apply s2 to values of s1, then merge
+// Compose two substitutions apply s2 to values of s1, then merge
 function composeSubst(
   ctx: InferContext,
   s1: Map<string, PType>,
@@ -160,7 +160,6 @@ function composeSubst(
   return result;
 }
 
-// Export
 export const appPTermImplementation = {
   [appPTermName]: {
     pTermName: appPTermName,

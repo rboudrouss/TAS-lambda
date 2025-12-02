@@ -29,7 +29,6 @@ declare module "../types.ts" {
   }
 }
 
-// Parser: ifz C then T else E
 const izteParser = (recurse: SingleParser<PTerm>): SingleParser<iztePtermType> =>
   C.string("ifz")
     .drop()
@@ -49,7 +48,6 @@ const izteParser = (recurse: SingleParser<PTerm>): SingleParser<iztePtermType> =
       else: r.at(2) as PTerm,
     }));
 
-// Alpha conversion
 const izteAlphaConversion = (
   recurse: (t: PTerm, renaming: Map<string, string>) => PTerm,
   renaming: Map<string, string>,
@@ -62,7 +60,6 @@ const izteAlphaConversion = (
     else: recurse(t.else, renaming),
   });
 
-// Substitution
 const izteSubstitution = (
   recurse: (t: PTerm, v: string, t0: PTerm) => PTerm,
   v: string,
@@ -75,7 +72,6 @@ const izteSubstitution = (
     else: recurse(t.else, v, t0),
   });
 
-// Evaluation: evaluate cond first, then pick branch (don't evaluate branches until chosen)
 const izteEvaluation =
   (recurse: (ctx: evalContext<PTerm>) => evalContext<PTerm> | null, state: Map<string, PTerm>) =>
   (t: iztePtermType): evalContext<PTerm> | null => {
@@ -93,17 +89,14 @@ const izteEvaluation =
     return null;
   };
 
-// Free variables
 const izteFreeVarsCollector = (
   recurse: (t: PTerm) => Set<string>,
   t: iztePtermType
 ): Set<string> => new Set([...recurse(t.cond), ...recurse(t.then), ...recurse(t.else)]);
 
-// Print
 const iztePrint = (recurse: (t: PTerm) => string, t: iztePtermType): string =>
   `(ifz ${recurse(t.cond)} then ${recurse(t.then)} else ${recurse(t.else)})`;
 
-// Type inference: cond must be Int, then and else must have same type
 const izteInfer = (
   recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
   env: Environnement<PType>,

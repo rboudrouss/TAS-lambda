@@ -29,7 +29,6 @@ declare module "../types.ts" {
   }
 }
 
-// Parser: add M N
 const addParser = (recurse: SingleParser<PTerm>): SingleParser<addPtermType> =>
   C.string("add")
     .drop()
@@ -39,7 +38,6 @@ const addParser = (recurse: SingleParser<PTerm>): SingleParser<addPtermType> =>
     .then(F.lazy(() => recurse))
     .map((r) => addConstructor({ left: r.at(0) as PTerm, right: r.at(1) as PTerm }));
 
-// Alpha conversion
 const addAlphaConversion = (
   recurse: (t: PTerm, renaming: Map<string, string>) => PTerm,
   renaming: Map<string, string>,
@@ -51,7 +49,6 @@ const addAlphaConversion = (
     right: recurse(t.right, renaming),
   });
 
-// Substitution
 const addSubstitution = (
   recurse: (t: PTerm, v: string, t0: PTerm) => PTerm,
   v: string,
@@ -63,38 +60,31 @@ const addSubstitution = (
     right: recurse(t.right, v, t0),
   });
 
-// Evaluation: evaluate both, add if both are integers
 const addEvaluation =
   (recurse: (ctx: evalContext<PTerm>) => evalContext<PTerm> | null, state: Map<string, PTerm>) =>
   (t: addPtermType): evalContext<PTerm> | null => {
-    // Try to reduce left
     const leftResult = recurse({ term: t.left, state });
     if (leftResult) {
       return { term: addConstructor({ left: leftResult.term, right: t.right }), state: leftResult.state };
     }
-    // Try to reduce right
     const rightResult = recurse({ term: t.right, state });
     if (rightResult) {
       return { term: addConstructor({ left: t.left, right: rightResult.term }), state: rightResult.state };
     }
-    // Both are values, try to add
     if (t.left.type === "Int" && t.right.type === "Int") {
       return { term: intConstructor({ value: t.left.value + t.right.value }), state };
     }
     return null;
   };
 
-// Free variables
 const addFreeVarsCollector = (
   recurse: (t: PTerm) => Set<string>,
   t: addPtermType
 ): Set<string> => new Set([...recurse(t.left), ...recurse(t.right)]);
 
-// Print
 const addPrint = (recurse: (t: PTerm) => string, t: addPtermType): string =>
   `(${recurse(t.left)} + ${recurse(t.right)})`;
 
-// Type inference: both operands must be Int, result is Int
 const addInfer = (
   recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
   env: Environnement<PType>,
