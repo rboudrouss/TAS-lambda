@@ -2,11 +2,14 @@ import type { pTypeImplementation, PType } from "../types.ts";
 
 const tVarPTypeName = "TVar" as const;
 
-function tVarConstructor(arg: { name: string }) {
-  return { type: tVarPTypeName, name: arg.name };
+interface tVarType {
+  readonly type: typeof tVarPTypeName;
+  readonly name: string;
 }
 
-type tVarType = ReturnType<typeof tVarConstructor>;
+function tVarConstructor(arg: { name: string }): tVarType {
+  return { type: tVarPTypeName, name: arg.name };
+}
 
 declare module "../types.ts" {
   interface PTypeRegistry {

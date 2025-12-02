@@ -161,6 +161,16 @@ function unifyTypes(
     return rightResult;
   }
 
+  // Both are Int types
+  if (t1.type === "TInt" && t2.type === "TInt") {
+    return { success: true, type: t1, substitution: subst };
+  }
+
+  // Both are List types
+  if (t1.type === "TList" && t2.type === "TList") {
+    return unifyTypes(t1.elem, t2.elem, subst, steps - 1);
+  }
+
   // Incompatible types
   return {
     success: false,

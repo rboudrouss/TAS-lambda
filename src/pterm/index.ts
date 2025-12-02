@@ -5,6 +5,16 @@ import { varPTermImplementation } from "./var.ts";
 import { absPTermImplementation } from "./abs.ts";
 import { appPTermImplementation } from "./app.ts";
 import { letPTermImplementation } from "./let.ts";
+import { intPTermImplementation } from "./int.ts";
+import { nilPTermImplementation } from "./nil.ts";
+import { addPTermImplementation } from "./add.ts";
+import { subPTermImplementation } from "./sub.ts";
+import { headPTermImplementation } from "./head.ts";
+import { tailPTermImplementation } from "./tail.ts";
+import { consPTermImplementation } from "./cons.ts";
+import { iztePTermImplementation } from "./izte.ts";
+import { ietePTermImplementation } from "./iete.ts";
+import { fixPTermImplementation } from "./fix.ts";
 
 // Collect all implementations
 const registry: {
@@ -14,6 +24,16 @@ const registry: {
   ...absPTermImplementation,
   ...appPTermImplementation,
   ...letPTermImplementation,
+  ...intPTermImplementation,
+  ...nilPTermImplementation,
+  ...addPTermImplementation,
+  ...subPTermImplementation,
+  ...headPTermImplementation,
+  ...tailPTermImplementation,
+  ...consPTermImplementation,
+  ...iztePTermImplementation,
+  ...ietePTermImplementation,
+  ...fixPTermImplementation,
 } as const;
 
 export function getImpl<K extends PTerm["type"]>(

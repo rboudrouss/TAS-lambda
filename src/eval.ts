@@ -27,8 +27,15 @@ export function substitute(t: PTerm, v: string, t0: PTerm): PTerm {
 export function evaluate(ctx: evalContext<PTerm>): evalContext<PTerm> | null {
   const { term, state } = ctx;
 
+  // Beta reduction: (λx.M) N → M[x := N]
   if (term.type === "App" && term.left.type === "Abs") {
     const substituted = substitute(term.left.body, term.left.name, term.right);
+    return { term: substituted, state };
+  }
+
+  // Fix unfolding: fix (λf.M) → M[f := fix (λf.M)]
+  if (term.type === "Fix" && term.func.type === "Abs") {
+    const substituted = substitute(term.func.body, term.func.name, term);
     return { term: substituted, state };
   }
 

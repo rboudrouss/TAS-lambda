@@ -25,7 +25,13 @@ declare module "../types.ts" {
 }
 
 // Reserved words that cannot be used as variable names
-const RESERVED_WORDS = new Set(["let", "in"]);
+const RESERVED_WORDS = new Set([
+  "let", "in",
+  "add", "sub",
+  "head", "tail", "cons", "nil",
+  "ifz", "ife", "then", "else",
+  "fix",
+]);
 
 // Parser
 
