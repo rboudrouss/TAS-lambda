@@ -1,5 +1,12 @@
 import { SingleParser, C, F } from "@masala/parser";
-import type { pTermImplementation, PTerm } from "../types.ts";
+import type {
+  pTermImplementation,
+  PTerm,
+  PType,
+  Environnement,
+  Equation,
+} from "../types.ts";
+import { arrowConstructor } from "../ptype/arrow.ts";
 
 // Definition
 
@@ -94,6 +101,35 @@ const absFreeVarsCollector = (
 const absPrint = (recurse: (t: PTerm) => string, t: absPtermType): string =>
   `(fun ${t.name} -> ${recurse(t.body)})`;
 
+// Generate Equation (type inference)
+// For λx.M with target type τ:
+// - Create fresh type variables α (for x) and β (for body)
+// - Add x:α to the environment
+// - Recursively generate equations for M with target type β
+// - Generate equation: (α → β) = τ
+
+const absGenEquation = (
+  recurse: (t: PTerm, ty: PType, env: Environnement<PType>) => Equation<PType>,
+  targetType: PType,
+  env: Environnement<PType>,
+  freshTypeVar: () => PType,
+  t: absPtermType
+): Equation<PType> => {
+  const argType = freshTypeVar();
+  const bodyType = freshTypeVar();
+
+  // Extend environment with x : argType
+  const newEnv = new Map(env);
+  newEnv.set(t.name, argType);
+
+  // Generate equations for the body
+  const bodyEquations = recurse(t.body, bodyType, newEnv);
+
+  const arrowType = arrowConstructor({ left: argType, right: bodyType });
+
+  return [...bodyEquations, [arrowType, targetType]];
+};
+
 // Export
 
 export const absPTermImplementation = {
@@ -106,5 +142,6 @@ export const absPTermImplementation = {
     evaluation: absEvaluation,
     freeVarsCollector: absFreeVarsCollector,
     print: absPrint,
+    genEquation: absGenEquation,
   } as pTermImplementation<absPtermType>,
 };

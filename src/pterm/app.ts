@@ -1,5 +1,13 @@
 import { SingleParser, C, F } from "@masala/parser";
-import type { pTermImplementation, PTerm, evalContext } from "../types.ts";
+import type {
+  pTermImplementation,
+  PTerm,
+  evalContext,
+  PType,
+  Environnement,
+  Equation,
+} from "../types.ts";
+import { arrowConstructor } from "../ptype/arrow.ts";
 
 // Definition
 
@@ -109,6 +117,26 @@ const appFreeVarsCollector = (
 const appPrint = (recurse: (t: PTerm) => string, t: appPtermType): string =>
   `(${recurse(t.left)} ${recurse(t.right)})`;
 
+// Generate Equation
+
+const appGenEquation = (
+  recurse: (t: PTerm, ty: PType, env: Environnement<PType>) => Equation<PType>,
+  targetType: PType,
+  env: Environnement<PType>,
+  freshTypeVar: () => PType,
+  t: appPtermType
+): Equation<PType> => {
+  const argType = freshTypeVar();
+
+  // M must have type (argType -> targetType)
+  const arrowType = arrowConstructor({ left: argType, right: targetType });
+
+  const leftEquations = recurse(t.left, arrowType, env);
+  const rightEquations = recurse(t.right, argType, env);
+
+  return [...leftEquations, ...rightEquations];
+};
+
 // Export
 
 export const appPTermImplementation = {
@@ -121,5 +149,6 @@ export const appPTermImplementation = {
     evaluation: appEvaluation,
     freeVarsCollector: appFreeVarsCollector,
     print: appPrint,
+    genEquation: appGenEquation,
   } as pTermImplementation<appPtermType>,
 };

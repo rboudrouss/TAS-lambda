@@ -1,5 +1,11 @@
 import { SingleParser, F } from "@masala/parser";
-import type { pTermImplementation, PTerm } from "../types.ts";
+import type {
+  pTermImplementation,
+  PTerm,
+  PType,
+  Environnement,
+  Equation,
+} from "../types.ts";
 
 // Definition
 
@@ -66,6 +72,22 @@ const varFreeVarsCollector = (
 const varPrint = (_recurse: (t: PTerm) => string, t: varPtermType): string =>
   t.name;
 
+// Generate Equation (type inference)
+
+const varGenEquation = (
+  _recurse: (t: PTerm, ty: PType, env: Environnement<PType>) => Equation<PType>,
+  targetType: PType,
+  env: Environnement<PType>,
+  _freshTypeVar: () => PType,
+  t: varPtermType
+): Equation<PType> => {
+  const varType = env.get(t.name);
+  if (!varType) {
+    throw new Error(`Unbound variable: ${t.name}`);
+  }
+  return [[varType, targetType]];
+};
+
 // Export
 
 export const varPTermImplementation = {
@@ -78,5 +100,6 @@ export const varPTermImplementation = {
     evaluation: varEvaluation,
     freeVarsCollector: varFreeVarsCollector,
     print: varPrint,
+    genEquation: varGenEquation,
   } as pTermImplementation<varPtermType>,
 };
