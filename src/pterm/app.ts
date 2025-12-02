@@ -5,7 +5,8 @@ import type {
   evalContext,
   PType,
   Environnement,
-  Equation,
+  InferContext,
+  InferResult,
 } from "../types.ts";
 import { arrowConstructor } from "../ptype/arrow.ts";
 
@@ -117,25 +118,67 @@ const appFreeVarsCollector = (
 const appPrint = (recurse: (t: PTerm) => string, t: appPtermType): string =>
   `(${recurse(t.left)} ${recurse(t.right)})`;
 
-// Generate Equation
+// Type inference (Algorithm W)
+// For (M N): infer M, infer N, unify M's type with (N's type → fresh), return fresh
 
-const appGenEquation = (
-  recurse: (t: PTerm, ty: PType, env: Environnement<PType>) => Equation<PType>,
-  targetType: PType,
+const appInfer = (
+  recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
   env: Environnement<PType>,
-  freshTypeVar: () => PType,
+  ctx: InferContext,
   t: appPtermType
-): Equation<PType> => {
-  const argType = freshTypeVar();
+): InferResult => {
+  // Infer type of left (function)
+  const leftResult = recurse(t.left, env, ctx);
+  if (!leftResult.success) {
+    return leftResult;
+  }
 
-  // M must have type (argType -> targetType)
-  const arrowType = arrowConstructor({ left: argType, right: targetType });
+  // Apply substitution to env before inferring right
+  const envAfterLeft = ctx.applySubstToEnv(leftResult.substitution, env);
 
-  const leftEquations = recurse(t.left, arrowType, env);
-  const rightEquations = recurse(t.right, argType, env);
+  // Infer type of right (argument)
+  const rightResult = recurse(t.right, envAfterLeft, ctx);
+  if (!rightResult.success) {
+    return rightResult;
+  }
 
-  return [...leftEquations, ...rightEquations];
+  // Compose substitutions
+  const composedSubst = composeSubst(ctx, leftResult.substitution, rightResult.substitution);
+
+  // Apply composed substitution to left's type
+  const leftType = ctx.applySubst(rightResult.substitution, leftResult.type);
+
+  // Create fresh result type and unify left with (right → result)
+  const resultType = ctx.freshTypeVar();
+  const expectedFuncType = arrowConstructor({ left: rightResult.type, right: resultType });
+
+  const unifyResult = ctx.unify(leftType, expectedFuncType, composedSubst);
+  if (!unifyResult.success) {
+    return unifyResult;
+  }
+
+  // Apply final substitution to result type
+  const finalType = ctx.applySubst(unifyResult.substitution, resultType);
+  return { success: true, type: finalType, substitution: unifyResult.substitution };
 };
+
+// Compose two substitutions: apply s2 to values of s1, then merge
+function composeSubst(
+  ctx: InferContext,
+  s1: Map<string, PType>,
+  s2: Map<string, PType>
+): Map<string, PType> {
+  const result = new Map<string, PType>();
+  for (const [k, v] of s1) {
+    result.set(k, ctx.applySubst(s2, v));
+  }
+  for (const [k, v] of s2) {
+    if (!result.has(k)) {
+      result.set(k, v);
+    }
+  }
+  return result;
+}
 
 // Export
 
@@ -149,6 +192,6 @@ export const appPTermImplementation = {
     evaluation: appEvaluation,
     freeVarsCollector: appFreeVarsCollector,
     print: appPrint,
-    genEquation: appGenEquation,
+    infer: appInfer,
   } as pTermImplementation<appPtermType>,
 };
