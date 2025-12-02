@@ -1,7 +1,8 @@
-import type { Equation, Environnement, PType } from "./types.ts";
+import type { Environnement, PType, InferContext, InferResult, Substitution } from "./types.ts";
 import { getImpl, type PTerm } from "./pterm/index.ts";
 import { getTypeImpl } from "./ptype/index.ts";
 import { tVarConstructor } from "./ptype/var.ts";
+import { forallConstructor } from "./ptype/forall.ts";
 import { freeVars } from "./eval.ts";
 
 let typeVarCounter = 0;
@@ -34,90 +35,128 @@ export function printType(ty: PType): string {
   return impl.print(printType, ty);
 }
 
-export function generateEquations(
-  t: PTerm,
-  targetType: PType,
-  env: Environnement<PType>
-): Equation<PType> {
-  const impl = getImpl(t);
-  return impl.genEquation(generateEquations, targetType, env, freshTypeVar, t);
+// Apply a substitution to a type
+export function applySubst(subst: Substitution, ty: PType): PType {
+  let result = ty;
+  for (const [varName, newType] of subst) {
+    result = typeSubstitute(result, varName, newType);
+  }
+  return result;
 }
 
-function substituteInEquation(
-  eq: ReadonlyArray<readonly [PType, PType]>,
-  varName: string,
-  newType: PType
-): Array<readonly [PType, PType]> {
-  return eq.map(([t1, t2]) => [
-    typeSubstitute(t1, varName, newType),
-    typeSubstitute(t2, varName, newType),
-  ] as const);
+// Apply a substitution to all types in an environment
+export function applySubstToEnv(subst: Substitution, env: Environnement<PType>): Environnement<PType> {
+  const result: Environnement<PType> = new Map();
+  for (const [name, ty] of env) {
+    result.set(name, applySubst(subst, ty));
+  }
+  return result;
 }
 
-export type UnificationResult =
-  | { success: true; type: PType }
-  | { success: false; error: string };
+// Quantify over type variables not in the environment
+export function generalize(ty: PType, env: Environnement<PType>): PType {
+  const envFreeVars = new Set<string>();
+  for (const envTy of env.values()) {
+    for (const v of typeFreeVars(envTy)) {
+      envFreeVars.add(v);
+    }
+  }
+  const tyFreeVars = typeFreeVars(ty);
+  let result = ty;
+  for (const v of tyFreeVars) {
+    if (!envFreeVars.has(v)) {
+      result = forallConstructor({ var: v, body: result });
+    }
+  }
+  return result;
+}
+
+// Replace quantified variables with fresh type variables
+export function instantiate(ty: PType): PType {
+  if (ty.type === "Forall") {
+    const fresh = freshTypeVar();
+    const substituted = typeSubstitute(ty.body, ty.var, fresh);
+    return instantiate(substituted);
+  }
+  return ty;
+}
 
 const MAX_UNIFICATION_STEPS = 1000;
 
-export function unify(
-  equations: Equation<PType>,
-  target: PType,
-  maxSteps: number = MAX_UNIFICATION_STEPS
-): UnificationResult {
-  let eqs = [...equations];
-  let targetType = target;
-  let steps = maxSteps;
+// Unify two types, extending the given substitution
+export function unify(t1: PType, t2: PType, subst: Substitution): InferResult {
+  // Apply current substitution to both types
+  const type1 = applySubst(subst, t1);
+  const type2 = applySubst(subst, t2);
 
-  while (eqs.length > 0 && steps > 0) {
-    const [[t1, t2], ...rest] = eqs;
-    eqs = rest;
-    steps--;
+  return unifyTypes(type1, type2, subst, MAX_UNIFICATION_STEPS);
+}
 
-    // Case 1: Both are the same type variable - skip
-    if (t1.type === "TVar" && t2.type === "TVar" && t1.name === t2.name) {
-      continue;
-    }
-
-    // Case 2: t1 is a type variable
-    if (t1.type === "TVar") {
-      // Occurs check
-      if (typeContainsVar(t1.name, t2)) {
-        return { success: false, error: `Occurs check failed: ${t1.name} appears in ${printType(t2)}` };
-      }
-      // Substitute everywhere
-      eqs = substituteInEquation(eqs, t1.name, t2);
-      targetType = typeSubstitute(targetType, t1.name, t2);
-      continue;
-    }
-
-    // Case 3: t2 is a type variable
-    if (t2.type === "TVar") {
-      // Occurs check
-      if (typeContainsVar(t2.name, t1)) {
-        return { success: false, error: `Occurs check failed: ${t2.name} appears in ${printType(t1)}` };
-      }
-      // Substitute everywhere
-      eqs = substituteInEquation(eqs, t2.name, t1);
-      targetType = typeSubstitute(targetType, t2.name, t1);
-      continue;
-    }
-
-    // Case 4: Both are Arrow types - decompose
-    if (t1.type === "Arrow" && t2.type === "Arrow") {
-      eqs = [[t1.left, t2.left], [t1.right, t2.right], ...eqs];
-      continue;
-    }
-
-    // Case 5: Incompatible types
-    return { success: false, error: `Cannot unify ${printType(t1)} with ${printType(t2)}` };
-  }
-
-  if (steps === 0) {
+function unifyTypes(t1: PType, t2: PType, subst: Substitution, steps: number): InferResult {
+  if (steps <= 0) {
     return { success: false, error: "Unification timeout" };
   }
 
-  return { success: true, type: targetType };
+  // Same type variable
+  if (t1.type === "TVar" && t2.type === "TVar" && t1.name === t2.name) {
+    return { success: true, type: t1, substitution: subst };
+  }
+
+  // t1 is a type variable
+  if (t1.type === "TVar") {
+    if (typeContainsVar(t1.name, t2)) {
+      return { success: false, error: `Occurs check failed: ${t1.name} appears in ${printType(t2)}` };
+    }
+    const newSubst = new Map(subst);
+    newSubst.set(t1.name, t2);
+    return { success: true, type: t2, substitution: newSubst };
+  }
+
+  // t2 is a type variable
+  if (t2.type === "TVar") {
+    if (typeContainsVar(t2.name, t1)) {
+      return { success: false, error: `Occurs check failed: ${t2.name} appears in ${printType(t1)}` };
+    }
+    const newSubst = new Map(subst);
+    newSubst.set(t2.name, t1);
+    return { success: true, type: t1, substitution: newSubst };
+  }
+
+  // Both are Arrow types
+  if (t1.type === "Arrow" && t2.type === "Arrow") {
+    const leftResult = unifyTypes(t1.left, t2.left, subst, steps - 1);
+    if (!leftResult.success) {
+      return leftResult;
+    }
+    const rightResult = unifyTypes(
+      applySubst(leftResult.substitution, t1.right),
+      applySubst(leftResult.substitution, t2.right),
+      leftResult.substitution,
+      steps - 1
+    );
+    return rightResult;
+  }
+
+  // Incompatible types
+  return { success: false, error: `Cannot unify ${printType(t1)} with ${printType(t2)}` };
+}
+
+// The inference context with all utilities
+function createInferContext(): InferContext {
+  return {
+    freshTypeVar,
+    unify,
+    generalize,
+    instantiate,
+    applySubst,
+    applySubstToEnv,
+  };
+}
+
+// Main infer function that dispatches to variant implementations
+function infer(term: PTerm, env: Environnement<PType>, ctx: InferContext): InferResult {
+  const impl = getImpl(term);
+  return impl.infer(infer, env, ctx, term);
 }
 
 function buildFreeVarEnv(term: PTerm): Environnement<PType> {
@@ -131,13 +170,12 @@ function buildFreeVarEnv(term: PTerm): Environnement<PType> {
 export function inferType(
   term: PTerm,
   env: Environnement<PType> = new Map()
-): UnificationResult {
+): InferResult {
   resetTypeVarCounter();
   const freeVarEnv = buildFreeVarEnv(term);
-  const fullEnv = new Map([...freeVarEnv, ...env]); // env overrides freeVarEnv
-  const targetType = freshTypeVar();
-  const equations = generateEquations(term, targetType, fullEnv);
-  return unify(equations, targetType);
+  const fullEnv = new Map([...freeVarEnv, ...env]);
+  const ctx = createInferContext();
+  return infer(term, fullEnv, ctx);
 }
 
 export function typeCheck(
