@@ -4,7 +4,7 @@ import { getImpl, type PTerm } from "./pterm/index.ts";
 let varCounter = 0;
 
 export function freshVarGen(): string {
-  return `_v${varCounter++}`;
+  return `v${varCounter++}`;
 }
 
 export function resetVarCounter(): void {
