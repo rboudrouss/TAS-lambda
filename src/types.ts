@@ -1,6 +1,6 @@
 import { SingleParser } from "@masala/parser";
 
-// Definition
+// PTerm definition
 
 export interface generalPTerm {
   type: string;
@@ -12,6 +12,19 @@ export interface PTermRegistry {}
 
 // The union type is derived from all registered variants
 export type PTerm = PTermRegistry[keyof PTermRegistry];
+
+// PType definition
+
+export interface generalPType {
+  type: string;
+}
+
+// Registry pattern: each variant extends this interface via declaration merging
+// deno-lint-ignore no-empty-interface
+export interface PTypeRegistry {}
+
+// The union type is derived from all registered variants
+export type PType = PTypeRegistry[keyof PTypeRegistry];
 
 // Alpha conversion
 
@@ -37,11 +50,11 @@ export type substitutionPartial<Variant extends generalPTerm> = (
 
 // Evaluation
 
-export type State<PTerm> = Map<string, PTerm>;
+export type State<T> = Map<string, T>;
 
-export type evalContext<PTerm> = {
-  term: PTerm;
-  state: State<PTerm>;
+export type evalContext<T> = {
+  term: T;
+  state: State<T>;
 };
 
 export type evaluationPartial<Variant extends generalPTerm> = (
@@ -61,22 +74,19 @@ export type printPartial<Variant extends generalPTerm> = (
   t: Variant
 ) => string;
 
+// Type inference (equation generation)
+
 export type Environnement<Ty> = Map<string, Ty>;
 
 export type Equation<Ty> = ReadonlyArray<readonly [Ty, Ty]>;
 
-export type GenEquationPartial<Variant extends generalPTerm, Ty> = (
-  recurse: (t: PTerm, ty: Ty, env: Environnement<Ty>) => Equation<Ty>,
-  targetType: Ty,
-  env: Environnement<Ty>,
-  freshTypeVar: () => Ty,
-  inference: (env: Environnement<Ty>, t: PTerm) => Ty | null,
+export type GenEquationPartial<Variant extends generalPTerm> = (
+  recurse: (t: PTerm, ty: PType, env: Environnement<PType>) => Equation<PType>,
+  targetType: PType,
+  env: Environnement<PType>,
+  freshTypeVar: () => PType,
   t: Variant
-) => Equation<Ty>;
-
-// PTerm implementation
-// Variant = the specific variant type (e.g., absPtermType)
-// PTerm = the full union type (e.g., PTerm)
+) => Equation<PType>;
 
 export type pTermImplementation<Variant extends generalPTerm> = {
   pTermName: Variant["type"];
@@ -87,52 +97,37 @@ export type pTermImplementation<Variant extends generalPTerm> = {
   freeVarsCollector: FreeVarsCollectorPartial<Variant>;
   parser: parserPartial<Variant>;
   print: printPartial<Variant>;
+  genEquation: GenEquationPartial<Variant>;
 };
 
-// PType implementation
-
-export type TypeFreeVarsCollectorPartial<PType, Ty> = (
-  recurse: (ty: Ty) => Set<string>,
-  ty: PType
+export type TypeFreeVarsCollectorPartial<Variant extends generalPType> = (
+  recurse: (ty: PType) => Set<string>,
+  ty: Variant
 ) => Set<string>;
 
-export type TypeSubstPartial<PType, Ty> = (
-  recurse: (ty: Ty, v: string, t0: Ty) => Ty,
+export type TypeSubstPartial<Variant extends generalPType> = (
+  recurse: (ty: PType, v: string, t0: PType) => PType,
   v: string,
-  t0: Ty,
-  ty: PType
-) => Ty;
+  t0: PType,
+  ty: Variant
+) => PType;
 
-export type BelongsPartial<PType, Ty> = (
-  recurse: (varName: string, ty: Ty) => boolean,
+export type TypeContainsVarPartial<Variant extends generalPType> = (
+  recurse: (varName: string, ty: PType) => boolean,
   varName: string,
-  ty: PType
+  ty: Variant
 ) => boolean;
 
-export type Compatible<Ty> = (ty1: Ty, ty2: Ty) => boolean;
+export type TypePrintPartial<Variant extends generalPType> = (
+  recurse: (ty: PType) => string,
+  ty: Variant
+) => string;
 
-export type SubstEquation<Ty> = (
-  eq: Equation<Ty>,
-  varName: string,
-  newType: Ty,
-  substType: (ty: Ty, varName: string, newType: Ty) => Ty
-) => Equation<Ty>;
-
-export type Generalise<Ty> = (
-  env: Environnement<Ty>,
-  ty: Ty,
-  freeVarsEnv: (env: Environnement<Ty>) => Set<string>,
-  typeFreeVars: (ty: Ty) => Set<string>,
-  mkForall: (varName: string, ty: Ty) => Ty
-) => Ty;
-
-export type pTypeImplementation<PType, Args, Ty> = {
-  pTypeName: string;
-  constructor: (args: Args) => PType;
-  freeVarsCollector: TypeFreeVarsCollectorPartial<PType, Ty>;
-  typeSubstitution: TypeSubstPartial<PType, Ty>;
-  belongs: BelongsPartial<PType, Ty>;
-  compatible: Compatible<Ty>;
-  substEquation: SubstEquation<Ty>;
-  generalise: Generalise<Ty>;
+export type pTypeImplementation<Variant extends generalPType> = {
+  pTypeName: Variant["type"];
+  constructor: (args: Omit<Variant, "type">) => Variant;
+  freeVarsCollector: TypeFreeVarsCollectorPartial<Variant>;
+  typeSubstitution: TypeSubstPartial<Variant>;
+  containsVar: TypeContainsVarPartial<Variant>;
+  print: TypePrintPartial<Variant>;
 };
