@@ -2,9 +2,10 @@ import { SingleParser, F } from "@masala/parser";
 import type {
   pTermImplementation,
   PTerm,
-  PType,
   Environnement,
-  Equation,
+  PType,
+  InferContext,
+  InferResult,
 } from "../types.ts";
 
 // Definition
@@ -23,10 +24,13 @@ declare module "../types.ts" {
   }
 }
 
+// Reserved words that cannot be used as variable names
+const RESERVED_WORDS = new Set(["let", "in"]);
+
 // Parser
 
 const varParser = (_recurse: SingleParser<PTerm>): SingleParser<varPtermType> =>
-  F.regex(/[a-zA-Z_][a-zA-Z0-9_]*/).map((m) => {
+  F.regex(/[a-zA-Z_][a-zA-Z0-9_]*/).filter((m) => !RESERVED_WORDS.has(m)).map((m) => {
     return varConstructor({ name: m });
   });
 
@@ -72,20 +76,21 @@ const varFreeVarsCollector = (
 const varPrint = (_recurse: (t: PTerm) => string, t: varPtermType): string =>
   t.name;
 
-// Generate Equation (type inference)
+// Type inference (Algorithm W)
 
-const varGenEquation = (
-  _recurse: (t: PTerm, ty: PType, env: Environnement<PType>) => Equation<PType>,
-  targetType: PType,
+const varInfer = (
+  _recurse: (t: PTerm, env: Environnement<PType>, ctx: InferContext) => InferResult,
   env: Environnement<PType>,
-  _freshTypeVar: () => PType,
+  ctx: InferContext,
   t: varPtermType
-): Equation<PType> => {
+): InferResult => {
   const varType = env.get(t.name);
   if (!varType) {
-    throw new Error(`Unbound variable: ${t.name}`);
+    return { success: false, error: `Unbound variable: ${t.name}` };
   }
-  return [[varType, targetType]];
+  // Instantiate polymorphic types
+  const instType = ctx.instantiate(varType);
+  return { success: true, type: instType, substitution: new Map() };
 };
 
 // Export
@@ -100,6 +105,6 @@ export const varPTermImplementation = {
     evaluation: varEvaluation,
     freeVarsCollector: varFreeVarsCollector,
     print: varPrint,
-    genEquation: varGenEquation,
+    infer: varInfer,
   } as pTermImplementation<varPtermType>,
 };
