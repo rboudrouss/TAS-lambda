@@ -1,7 +1,11 @@
 {
   "tasks": {
+    "demo": "deno run src/main.ts",
     "dev": "deno run --watch src/main.ts",
-    "cli": "deno run --allow-env src/cli.ts"
+    "cli": "deno run --allow-env src/cli.ts",
+    "eval": "deno run src/cli.ts eval",
+    "type": "deno run src/cli.ts type",
+    "run": "deno run --allow-read src/cli.ts run"
   },
   "imports": {
     "@masala/parser": "npm:@masala/parser@^2.0.0-rc2",

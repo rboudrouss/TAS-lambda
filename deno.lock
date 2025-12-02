@@ -41,9 +41,7 @@
   },
   "remote": {
     "https://esm.sh/ansi-colors-ts@0.0.1/denonext/ansi-colors-ts.mjs": "ce4b2e02141743d4c198499fca575907037e7fd7d2c9a1d11c745c3563fe4bb3",
-    "https://esm.sh/ansi-colors-ts@0.0.1?target=denonext": "b2918bda8807eca0e7a72c24f7b44c79716aaeaa18fa3f7d5af6f34c8e99192d",
-    "https://esm.sh/gh/Speykious/arcsquared@a7fa552/denonext/src/index.ts.mjs": "af3130c236dca810f9ca9c7fbf2a170af13666a73e41464d18a03a3f3c6ecc91",
-    "https://esm.sh/gh/Speykious/arcsquared@a7fa552/src/index.ts": "f4162c70714880ba197f42ef9ac56afe631cc628aa757485057ae50ddb917aae"
+    "https://esm.sh/ansi-colors-ts@0.0.1?target=denonext": "b2918bda8807eca0e7a72c24f7b44c79716aaeaa18fa3f7d5af6f34c8e99192d"
   },
   "workspace": {
     "dependencies": [
